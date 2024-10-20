@@ -4,4 +4,4 @@ from app import db
 # Example route
 @current_app.route('/')
 def home():
-    return jsonify({"message": "Hello, World!"})
+    return jsonify({"message": "Hello, Flask!"})
