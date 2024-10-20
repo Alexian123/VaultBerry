@@ -28,8 +28,8 @@ class AuthTestCase(unittest.TestCase):
             user = User.query.filter_by(email='test@email.com').first()
             self.assertIsNotNone(user)
 
-    def test_login(self):
-        response = self.client.post('/register', json={
+    def test_login_success(self):
+        self.client.post('/register', json={
             'email': 'test@email.com',
             'password': 'test'
         })
@@ -41,6 +41,7 @@ class AuthTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Login successful', response.data)
 
+    def test_login_fail(self):
         response = self.client.post('/login', json={
             'email': 'test@email.com',
             'password': 'wrong'
