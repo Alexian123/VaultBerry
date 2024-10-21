@@ -22,14 +22,12 @@ def get_posts():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.json
-    email = data['email']
-    password = data['password']
-    
-    # Hash the password on the backend
-    hashed_password = generate_password_hash(password)
-    
-    # Save the user with hashed password
-    new_user = User(email=email, hashed_password=hashed_password)
+    new_user = User(
+        email=data['email'],
+        hashed_password=generate_password_hash(data['password']),
+        first_name=data.get('first_name'),
+        last_name=data.get('last_name')
+    )
     db.session.add(new_user)
     db.session.commit()
 

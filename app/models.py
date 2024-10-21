@@ -1,21 +1,25 @@
+from sqlalchemy import Integer, VARCHAR, ForeignKey
+from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
 from app import db
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    hashed_password = db.Column(db.String(255), unique=True, nullable=False)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    email = mapped_column(VARCHAR(255), unique=True, nullable=False)
+    hashed_password = mapped_column(VARCHAR(255), unique=False, nullable=False)
+    first_name = mapped_column(VARCHAR(255), unique=False, nullable=True)
+    last_name = mapped_column(VARCHAR(255), unique=False, nullable=True)
     
     def __repr__(self):
         return f'<User {self.email}>'
 
 class VaultEntry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    name = db.Column(db.String(255), unique=True, nullable=False)
-    url = db.Column(db.String(255), unique=True, nullable=True)
-    encrypted_username = db.Column(db.String(255), unique=True, nullable=False)
-    encrypted_password = db.Column(db.String(255), unique=True, nullable=False)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    user_id = mapped_column(Integer, ForeignKey('user.id'), unique=False, nullable=False)
+    name = mapped_column(VARCHAR(255), unique=False, nullable=False)
+    url = mapped_column(VARCHAR(255), unique=False, nullable=True)
+    encrypted_username = mapped_column(VARCHAR(255), unique=False, nullable=False)
+    encrypted_password = mapped_column(VARCHAR(255), unique=False, nullable=False)
 
     def to_dict(self):
         return {
