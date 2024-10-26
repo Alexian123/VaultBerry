@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: e1eedb884f9d
+Revision ID: a23fe8b06fe4
 Revises: 
-Create Date: 2024-10-21 17:54:46.171428
+Create Date: 2024-10-26 12:22:09.212515
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e1eedb884f9d'
+revision = 'a23fe8b06fe4'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,13 +30,12 @@ def upgrade():
     op.create_table('vault_entry',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.VARCHAR(length=255), nullable=False),
+    sa.Column('title', sa.VARCHAR(length=255), nullable=False),
     sa.Column('url', sa.VARCHAR(length=255), nullable=True),
     sa.Column('encrypted_username', sa.VARCHAR(length=255), nullable=False),
     sa.Column('encrypted_password', sa.VARCHAR(length=255), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name')
+    sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
 

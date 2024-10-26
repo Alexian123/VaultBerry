@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
 class VaultEntry(db.Model):
     id = mapped_column(Integer, primary_key=True, autoincrement=True, nullable=False)
     user_id = mapped_column(Integer, ForeignKey('user.id'), unique=False, nullable=False)
-    name = mapped_column(VARCHAR(255), unique=False, nullable=False)
+    title = mapped_column(VARCHAR(255), unique=False, nullable=False)
     url = mapped_column(VARCHAR(255), unique=False, nullable=True)
     encrypted_username = mapped_column(VARCHAR(255), unique=False, nullable=False)
     encrypted_password = mapped_column(VARCHAR(255), unique=False, nullable=False)
@@ -24,11 +24,11 @@ class VaultEntry(db.Model):
     def to_dict(self):
         return {
             'user_id': self.user_id,
-            'name': self.name,
+            'title': self.title,
             'url': self.url,
             'encrypted_username': self.encrypted_username,
             'encrypted_password': self.encrypted_password
         }
 
     def __repr__(self):
-        return f'<VaultEntry {self.url} for User {self.user_id}>'
+        return f'<VaultEntry {self.title} for User {self.user_id}>'

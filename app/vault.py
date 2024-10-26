@@ -17,7 +17,7 @@ def add_vault_entry():
     data = request.json
     new_entry = VaultEntry(
         user_id=current_user.id,
-        name=data['name'],
+        title=data['title'],
         url=data.get('url'),
         encrypted_username=data['encrypted_username'],
         encrypted_password=data['encrypted_password']

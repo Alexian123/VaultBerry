@@ -27,7 +27,7 @@ class VaultTestCase(unittest.TestCase):
         })
 
         response = self.client.post('/entries', json={
-            'name': 'Account 1',
+            'title': 'Account 1',
             'url': 'www.website.com',
             'encrypted_username': 'abcdefg',
             'encrypted_password': 'zxc'
@@ -36,7 +36,7 @@ class VaultTestCase(unittest.TestCase):
         self.assertIn(b'Entry added successfully', response.data)
 
         response = self.client.post('/entries', json={
-            'name': 'Account 2',
+            'title': 'Account 2',
             'url': 'www.other.net',
             'encrypted_username': 'Hello',
             'encrypted_password': 'World'
@@ -45,7 +45,7 @@ class VaultTestCase(unittest.TestCase):
         self.assertIn(b'Entry added successfully', response.data)
 
         response = self.client.post('/entries', json={
-            'name': 'Account 3',
+            'title': 'Account 3',
             'encrypted_username': 'John',
             'encrypted_password': 'blablabla'
         })
