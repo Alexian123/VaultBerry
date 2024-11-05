@@ -15,6 +15,11 @@ def get_vault_entries():
 @login_required
 def add_vault_entry():
     data = request.json
+
+    existing_entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+    if existing_entry:
+        return jsonify({"message": "An entry with this title already exists for this user"}), 400
+
     new_entry = VaultEntry(
         user_id=current_user.id,
         title=data['title'],

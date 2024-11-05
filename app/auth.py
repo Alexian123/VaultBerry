@@ -17,21 +17,22 @@ def home():
 @auth_bp.route('/users')
 def get_users():
     users = User.query.all()
-    return {'users': [user.email for user in users]}
+    return jsonify({"users": [user.to_dict() for user in users]})
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.json
+
+    existing_user = User.query.filter_by(email=data['email']).first()
+    if existing_user:
+        return jsonify({"message": "Email already in use"}), 400
+
     new_user = User(
         email=data['email'],
         hashed_password=generate_password_hash(data['password']),
         first_name=data.get('first_name'),
         last_name=data.get('last_name')
     )
-
-    existing_user = User.query.filter_by(email=new_user.email).first()
-    if existing_user:
-        return jsonify({"message": "Email already in use"}), 400
 
     try:
         db.session.add(new_user)

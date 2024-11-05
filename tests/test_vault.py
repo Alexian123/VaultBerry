@@ -1,5 +1,5 @@
 import unittest
-from config import TestConfig
+from app.config import TestConfig
 from app import create_app, db
 
 class VaultTestCase(unittest.TestCase):
