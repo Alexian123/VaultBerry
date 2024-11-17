@@ -1,2 +1,2 @@
-# Vault Berry
-Backend for the Sovereign Vault Password Manager
+# VaultBerry
+Backend for the VaultBerry Password Manager
