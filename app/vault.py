@@ -8,26 +8,76 @@ vault_bp = Blueprint('vault', __name__)
 @vault_bp.route('/entries', methods=['GET'])
 @login_required
 def get_vault_entries():
-    entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
-    return jsonify({"entries": [entry.to_dict() for entry in entries]})
+    try:
+        entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
+        return jsonify({"entries": [entry.to_dict() for entry in entries]})
+    except Exception as e:
+        return jsonify({"message": "Failed to retrieve entries", "error": str(e)}), 500
 
-@vault_bp.route('/entries', methods=['POST'])
+
+@vault_bp.route('/entries/add', methods=['POST'])
 @login_required
 def add_vault_entry():
     data = request.json
 
-    existing_entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
-    if existing_entry:
-        return jsonify({"message": "An entry with this title already exists for this user"}), 400
+    try:
+        existing_entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        if existing_entry:
+            return jsonify({"message": "An entry with this title already exists for this user"}), 400
 
-    new_entry = VaultEntry(
-        user_id=current_user.id,
-        title=data['title'],
-        url=data.get('url'),
-        encrypted_username=data['encrypted_username'],
-        encrypted_password=data['encrypted_password']
-    )
-    db.session.add(new_entry)
-    db.session.commit()
+        new_entry = VaultEntry(
+            user_id=current_user.id,
+            title=data['title'],
+            url=data.get('url'),
+            encrypted_username=data['encrypted_username'],
+            encrypted_password=data['encrypted_password'],
+            notes=data.get('notes')
+        )
 
-    return jsonify({"message": "Entry added successfully"}), 201
+        db.session.add(new_entry)
+        db.session.commit()
+
+        return jsonify({"message": "Entry added successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Failed to add entry", "error": str(e)}), 500
+
+@vault_bp.route('/entries/modify', methods=['POST'])
+@login_required
+def modify_vault_entry():
+    data = request.json
+
+    try:
+        entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        if entry is None:
+            return jsonify({"message": "No entry with this title exists for this user"}), 400
+
+        entry.url = data.get('url')
+        entry.encrypted_password = data['encrypted_password']
+        entry.encrypted_username = data['encrypted_username']
+        entry.notes = data.get('notes')
+
+        db.session.commit()
+        
+        return jsonify({"message": "Entry modified successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Failed to modify entry", "error": str(e)}), 500
+
+@vault_bp.route('/entries/remove', methods=['POST'])
+@login_required
+def remove_vault_entry():
+    data = request.json
+
+    try:
+        entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        if entry is None:
+            return jsonify({"message": "No entry with this title exists for this user"}), 400
+
+        db.session.delete(entry)
+        db.session.commit()
+
+        return jsonify({"message": "Entry removed successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": "Failed to remove entry", "error": str(e)}), 500
