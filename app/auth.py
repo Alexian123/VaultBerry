@@ -33,6 +33,7 @@ def register():
 
         new_user = User(
             email=data['email'],
+            salt=data['salt'],
             hashed_password=generate_password_hash(data['password']),
             vault_key=data['vault_key'] ,
             recovery_key=data['recovery_key'],

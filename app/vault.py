@@ -9,7 +9,7 @@ vault_bp = Blueprint('vault', __name__)
 @login_required
 def get_vault_entries():
     try:
-        entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
+        entries = VaultEntry.query.filter_by(user_uuid=current_user.uuid).all()
         return jsonify({"entries": [entry.to_dict() for entry in entries]})
     except Exception as e:
         return jsonify({"message": "Failed to retrieve entries", "error": str(e)}), 500
@@ -21,7 +21,7 @@ def add_vault_entry():
     data = request.json
 
     try:
-        existing_entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        existing_entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
         if existing_entry:
             return jsonify({"message": "An entry with this title already exists for this user"}), 400
 
@@ -48,7 +48,7 @@ def modify_vault_entry():
     data = request.json
 
     try:
-        entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
         if entry is None:
             return jsonify({"message": "No entry with this title exists for this user"}), 400
 
@@ -70,7 +70,7 @@ def remove_vault_entry():
     data = request.json
 
     try:
-        entry = VaultEntry.query.filter_by(user_id=current_user.id).filter_by(title=data['title']).first()
+        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
         if entry is None:
             return jsonify({"message": "No entry with this title exists for this user"}), 400
 

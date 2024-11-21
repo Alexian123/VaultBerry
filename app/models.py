@@ -8,7 +8,8 @@ class User(db.Model, UserMixin):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     uuid = mapped_column(VARCHAR(36), default=lambda: str(uuid.uuid4()), unique=True)
     email = mapped_column(VARCHAR(255), unique=True)
-    hashed_password = mapped_column(VARCHAR(255) )
+    hashed_password = mapped_column(VARCHAR(255))
+    salt = mapped_column(VARCHAR(24))
     vault_key = mapped_column(VARCHAR(255))
     recovery_key = mapped_column(VARCHAR(255))
     first_name = mapped_column(VARCHAR(255), nullable=True)
@@ -16,8 +17,8 @@ class User(db.Model, UserMixin):
 
     def to_dict(self):
         return {
-            'uuid': self.uuid,
             'email': self.email,
+            'salt': self.salt,
             'vault_key': self.vault_key,
             'recovery_key': self.recovery_key,
             'first_name': self.first_name,
