@@ -43,6 +43,7 @@ class VaultEntry(db.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'title': self.title,
             'url': self.url,
             'encrypted_username': self.encrypted_username,

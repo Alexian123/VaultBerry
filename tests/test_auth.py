@@ -19,7 +19,10 @@ class AuthTestCase(unittest.TestCase):
     def test_register(self):
         response = self.client.post('/register', json={
             'email': 'test@email.com',
-            'password': 'test'
+            'password': 'test',
+            'salt': 'abcdefghabcdefghabcdefgh',
+            'vault_key': 'key',
+            'recovery_key': 'also key'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'User registered successfully', response.data)
@@ -29,17 +32,21 @@ class AuthTestCase(unittest.TestCase):
             self.assertIsNotNone(user)
 
     def test_login_success(self):
-        self.client.post('/register', json={
+        response = self.client.post('/register', json={
             'email': 'test@email.com',
-            'password': 'test'
+            'password': 'test',
+            'salt': 'abcdefghabcdefghabcdefgh',
+            'vault_key': 'key',
+            'recovery_key': 'also key'
         })
+        self.assertEqual(response.status_code, 201)
 
         response = self.client.post('/login', json={
             'email': 'test@email.com',
             'password': 'test'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Login successful', response.data)
+        self.assertIn(b'user', response.data)
 
     def test_login_fail(self):
         response = self.client.post('/login', json={
@@ -48,6 +55,28 @@ class AuthTestCase(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 401)
         self.assertIn(b'Invalid credentials', response.data)
+
+    def test_logout(self):
+        response = self.client.post('/register', json={
+            'email': 'test@email.com',
+            'password': 'test',
+            'salt': 'abcdefghabcdefghabcdefgh',
+            'vault_key': 'key',
+            'recovery_key': 'also key'
+        })
+        self.assertEqual(response.status_code, 201)
+
+        response = self.client.post('/login', json={
+            'email': 'test@email.com',
+            'password': 'test'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'user', response.data)
+
+        response = self.client.post('/logout')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Logout successful', response.data)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -18,7 +18,7 @@ def home():
 def get_users():
     try:
         users = User.query.all()
-        return jsonify({"users": [user.to_dict() for user in users]})
+        return jsonify({"users": [user.to_dict() for user in users]}), 200
     except Exception as e:
         return jsonify({"message": "User registration failed", "error": str(e)}), 400
 
@@ -61,7 +61,7 @@ def login():
         # Check if password is correct
         if user and check_password_hash(user.hashed_password, password):
             login_user(user)
-            return jsonify({"user": user.toDict()})
+            return jsonify({"user": user.to_dict()})
         else:
             return jsonify({"message": "Invalid credentials"}), 401
     except Exception as e:

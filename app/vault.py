@@ -10,7 +10,7 @@ vault_bp = Blueprint('vault', __name__)
 def get_vault_entries():
     try:
         entries = VaultEntry.query.filter_by(user_uuid=current_user.uuid).all()
-        return jsonify({"entries": [entry.to_dict() for entry in entries]})
+        return jsonify({"entries": [entry.to_dict() for entry in entries]}), 200
     except Exception as e:
         return jsonify({"message": "Failed to retrieve entries", "error": str(e)}), 500
 
@@ -26,7 +26,7 @@ def add_vault_entry():
             return jsonify({"message": "An entry with this title already exists for this user"}), 400
 
         new_entry = VaultEntry(
-            user_id=current_user.id,
+            user_uuid=current_user.uuid,
             title=data['title'],
             url=data.get('url'),
             encrypted_username=data['encrypted_username'],
@@ -48,13 +48,14 @@ def modify_vault_entry():
     data = request.json
 
     try:
-        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
+        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(id=data['id']).first()
         if entry is None:
-            return jsonify({"message": "No entry with this title exists for this user"}), 400
+            return jsonify({"message": "No entry with this ID exists for this user"}), 400
 
+        entry.title = data['title']
         entry.url = data.get('url')
-        entry.encrypted_password = data['encrypted_password']
-        entry.encrypted_username = data['encrypted_username']
+        entry.encrypted_password = data.get('encrypted_password')
+        entry.encrypted_username = data.get('encrypted_username')
         entry.notes = data.get('notes')
 
         db.session.commit()
@@ -70,9 +71,9 @@ def remove_vault_entry():
     data = request.json
 
     try:
-        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
+        entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(id=data['id']).first()
         if entry is None:
-            return jsonify({"message": "No entry with this title exists for this user"}), 400
+            return jsonify({"message": "No entry with this id exists for this user"}), 400
 
         db.session.delete(entry)
         db.session.commit()
