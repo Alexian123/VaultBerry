@@ -15,16 +15,6 @@ class User(db.Model, UserMixin):
     first_name = mapped_column(VARCHAR(255), nullable=True)
     last_name = mapped_column(VARCHAR(255), nullable=True)
 
-    def to_dict(self):
-        return {
-            'email': self.email,
-            'salt': self.salt,
-            'vault_key': self.vault_key,
-            'recovery_key': self.recovery_key,
-            'first_name': self.first_name,
-            'last_name': self.last_name
-        }
-    
     def __repr__(self):
         return f'<User {self.email}>'
 

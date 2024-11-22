@@ -46,7 +46,7 @@ class AuthTestCase(unittest.TestCase):
             'password': 'test'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'user', response.data)
+        self.assertIn(b'salt', response.data)
 
     def test_login_fail(self):
         response = self.client.post('/login', json={
@@ -71,7 +71,7 @@ class AuthTestCase(unittest.TestCase):
             'password': 'test'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'user', response.data)
+        self.assertIn(b'salt', response.data)
 
         response = self.client.post('/logout')
         self.assertEqual(response.status_code, 200)
