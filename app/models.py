@@ -23,8 +23,8 @@ class VaultEntry(db.Model):
     user_uuid = mapped_column(VARCHAR(36), ForeignKey('user.uuid'))
     title = mapped_column(VARCHAR(255))
     url = mapped_column(VARCHAR(255), nullable=True)
-    encrypted_username = mapped_column(VARCHAR(255), nullable=True)
-    encrypted_password = mapped_column(VARCHAR(255), nullable=True)
+    encrypted_username = mapped_column(VARCHAR(255))
+    encrypted_password = mapped_column(VARCHAR(255))
     notes = mapped_column(Text, nullable=True)
 
     __table_args__ = (
