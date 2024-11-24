@@ -36,7 +36,7 @@ class VaultTestCase(unittest.TestCase):
             'encrypted_password': 'zxc'
         })
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry added successfully', response.data)
+        self.assertIn(b'title', response.data)
 
         response = self.client.get('/entries')
         self.assertEqual(response.status_code, 200)
@@ -63,7 +63,7 @@ class VaultTestCase(unittest.TestCase):
             'encrypted_password': 'zxc'
         })
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry added successfully', response.data)
+        self.assertIn(b'title', response.data)
 
         response = self.client.post('/entries/add', json={
             'title': 'Account 2',
@@ -72,7 +72,7 @@ class VaultTestCase(unittest.TestCase):
             'encrypted_password': 'zxc'
         })
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry added successfully', response.data)
+        self.assertIn(b'title', response.data)
 
         response = self.client.get('/entries')
         self.assertEqual(response.status_code, 200)
@@ -107,7 +107,7 @@ class VaultTestCase(unittest.TestCase):
             'encrypted_password': 'zxc'
         })
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry added successfully', response.data)
+        self.assertIn(b'title', response.data)
 
         response = self.client.post('/entries/add', json={
             'title': 'Account 2',
@@ -116,7 +116,7 @@ class VaultTestCase(unittest.TestCase):
             'encrypted_password': 'World'
         })
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry added successfully', response.data)
+        self.assertIn(b'title', response.data)
 
         response = self.client.get('/entries')
         self.assertEqual(response.status_code, 200)

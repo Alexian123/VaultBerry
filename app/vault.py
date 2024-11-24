@@ -37,7 +37,7 @@ def add_vault_entry():
         db.session.add(new_entry)
         db.session.commit()
 
-        return jsonify({"message": "Entry added successfully"}), 201
+        return jsonify(new_entry.to_dict()), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": "Failed to add entry", "error": str(e)}), 500
