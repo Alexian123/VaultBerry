@@ -61,7 +61,7 @@ def login():
         # Check if password is correct
         if user and check_password_hash(user.hashed_password, password):
             login_user(user)
-            return jsonify({"salt": user.salt, "vault_key": user.vault_key, "recovery_key": user.recovery_key}), 200
+            return jsonify({"salt": user.salt, "vault_key": user.vault_key}), 200
         else:
             return jsonify({"message": "Invalid credentials"}), 401
     except Exception as e:
