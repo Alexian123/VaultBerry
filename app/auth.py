@@ -20,7 +20,7 @@ def get_users():
         users = User.query.all()
         return jsonify({"users": [user.to_dict() for user in users]}), 200
     except Exception as e:
-        return jsonify({"message": "User registration failed", "error": str(e)}), 400
+        return jsonify({"message": "Failed to retrieve users", "error": str(e)}), 400
 
 @auth_bp.route('/register', methods=['POST'])
 def register():

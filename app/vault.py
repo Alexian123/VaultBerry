@@ -10,7 +10,7 @@ vault_bp = Blueprint('vault', __name__)
 def get_vault_entries():
     try:
         entries = VaultEntry.query.filter_by(user_uuid=current_user.uuid).all()
-        return jsonify({"entries": [entry.to_dict() for entry in entries]}), 200
+        return jsonify([entry.to_dict() for entry in entries]), 200
     except Exception as e:
         return jsonify({"message": "Failed to retrieve entries", "error": str(e)}), 500
 
