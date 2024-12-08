@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User
+from app.models import User, VaultEntry
 from app import db, login_manager
 
 auth_bp = Blueprint('auth', __name__)
@@ -12,7 +12,7 @@ def load_user(user_id):
 
 @auth_bp.route('/')
 def home():
-    return jsonify({"message": "Hello, Flask!"})
+    return jsonify("Hello, Flask!")
 
 @auth_bp.route('/users')
 def get_users():
@@ -20,7 +20,7 @@ def get_users():
         users = User.query.all()
         return jsonify({"users": [user.to_dict() for user in users]}), 200
     except Exception as e:
-        return jsonify({"message": "Failed to retrieve users", "error": str(e)}), 400
+        return jsonify(str(e)), 400
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -29,7 +29,7 @@ def register():
     try:
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
-            return jsonify({"message": "Email already in use"}), 400
+            return jsonify("Email already in use"), 400
 
         new_user = User(
             email=data['email'],
@@ -43,10 +43,10 @@ def register():
 
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({"message": "User registered successfully"}), 201
+        return jsonify("User registered successfully"), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": "User registration failed", "error": str(e)}), 400
+        return jsonify(str(e)), 400
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -63,15 +63,15 @@ def login():
             login_user(user)
             return jsonify({"salt": user.salt, "vault_key": user.vault_key}), 200
         else:
-            return jsonify({"message": "Invalid credentials"}), 401
+            return jsonify("Invalid credentials"), 401
     except Exception as e:
-        return jsonify({"message": "Login failed", "error": str(e)}), 400
+        return jsonify(str(e)), 400
 
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
     try:
         logout_user()
-        return jsonify({"message": "Logout successful"}), 200
+        return jsonify("Logout successful"), 200
     except Exception as e:
-        return jsonify({"message": "Logout failed", "error": str(e)}), 400
+        return jsonify(str(e)), 400

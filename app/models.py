@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, VARCHAR, Text, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, VARCHAR, Text, ForeignKey, UniqueConstraint, BigInteger
 from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
 from app import db
@@ -29,6 +29,7 @@ class User(db.Model, UserMixin):
 class VaultEntry(db.Model):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_uuid = mapped_column(VARCHAR(36), ForeignKey('user.uuid'))
+    timestamp = mapped_column(BigInteger)
     title = mapped_column(VARCHAR(255))
     url = mapped_column(VARCHAR(255), nullable=True)
     encrypted_username = mapped_column(VARCHAR(255))
@@ -41,7 +42,7 @@ class VaultEntry(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'timestamp': self.timestamp,
             'title': self.title,
             'url': self.url,
             'encrypted_username': self.encrypted_username,
