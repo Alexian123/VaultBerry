@@ -10,10 +10,6 @@ auth_bp = Blueprint('auth', __name__)
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-@auth_bp.route('/')
-def home():
-    return jsonify("Hello, Flask!")
-
 @auth_bp.route('/users')
 def get_users():
     try:

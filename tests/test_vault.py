@@ -43,7 +43,7 @@ class VaultTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         #print(response.json)
 
-    def test_remove_entry(self):
+    def test_delete_entry(self):
         self.client.post('/register', json={
             'email': 'test@email.com',
             'password': 'test',
@@ -82,7 +82,7 @@ class VaultTestCase(unittest.TestCase):
         #print(response.json)
 
         timestamp = (response.json)[0]['timestamp']
-        response = self.client.delete(f'/entries/remove/{timestamp}')
+        response = self.client.delete(f'/entries/delete/{timestamp}')
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'Entry removed successfully', response.data)
 
@@ -90,7 +90,7 @@ class VaultTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         #print(response.json)
 
-    def test_modify_entry(self):
+    def test_update_entry(self):
         self.client.post('/register', json={
             'email': 'test@email.com',
             'password': 'test',
@@ -132,7 +132,7 @@ class VaultTestCase(unittest.TestCase):
         #print(second_entry)
         second_entry['title'] = 'Account 3'
         second_entry['encrypted_username'] = 'New Username'
-        response = self.client.post('/entries/modify', json=second_entry)
+        response = self.client.post('/entries/update', json=second_entry)
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'Entry modified successfully', response.data)
 
