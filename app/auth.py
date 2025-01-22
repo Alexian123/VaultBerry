@@ -16,7 +16,7 @@ def get_users():
         users = User.query.all()
         return jsonify({"users": [user.to_dict() for user in users]}), 200
     except Exception as e:
-        return jsonify(str(e)), 400
+        return jsonify({"error": str(e)}), 400
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -25,7 +25,7 @@ def register():
     try:
         existing_user = User.query.filter_by(email=data['email']).first()
         if existing_user:
-            return jsonify("Email already in use"), 400
+            return jsonify({"error": "Email already in use"}), 400
 
         new_user = User(
             email=data['email'],
@@ -39,10 +39,10 @@ def register():
 
         db.session.add(new_user)
         db.session.commit()
-        return jsonify("User registered successfully"), 201
+        return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 400
+        return jsonify({"error": str(e)}), 400
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -59,15 +59,15 @@ def login():
             login_user(user)
             return jsonify({"salt": user.salt, "vault_key": user.vault_key}), 200
         else:
-            return jsonify("Invalid credentials"), 401
+            return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
-        return jsonify(str(e)), 400
+        return jsonify({"error": str(e)}), 400
 
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
     try:
         logout_user()
-        return jsonify("Logout successful"), 200
+        return jsonify({"message": "Logout successful"}), 200
     except Exception as e:
-        return jsonify(str(e)), 400
+        return jsonify({"error": str(e)}), 400

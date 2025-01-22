@@ -14,7 +14,7 @@ def get_vault_entries():
         entries = VaultEntry.query.filter_by(user_uuid=current_user.uuid).all()
         return jsonify([entry.to_dict() for entry in entries]), 200
     except Exception as e:
-        return jsonify(str(e)), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @vault_bp.route(f'{BASE_URL}/add', methods=['POST'])
@@ -25,7 +25,7 @@ def add_vault_entry():
     try:
         existing_entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(title=data['title']).first()
         if existing_entry:
-            return jsonify("An entry with this title already exists for this user"), 400
+            return jsonify({"error": "An entry with this title already exists for this user"}), 400
 
         new_entry = VaultEntry(
             user_uuid=current_user.uuid,
@@ -40,10 +40,10 @@ def add_vault_entry():
         db.session.add(new_entry)
         db.session.commit()
 
-        return jsonify("Entry added successfully"), 201
+        return jsonify({"message": "Entry added successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return jsonify({"error": str(e)}), 500
 
 @vault_bp.route(f'{BASE_URL}/update', methods=['POST'])
 @login_required
@@ -53,7 +53,7 @@ def update_vault_entry():
     try:
         entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(timestamp=data['timestamp']).first()
         if entry is None:
-            return jsonify("Entry not found"), 400
+            return jsonify({"error": "Entry not found"}), 400
 
         entry.title = data['title']
         entry.url = data.get('url')
@@ -63,10 +63,10 @@ def update_vault_entry():
 
         db.session.commit()
         
-        return jsonify("Entry modified successfully"), 201
+        return jsonify({"message": "Entry modified successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return jsonify({"error": str(e)}), 500
 
 @vault_bp.route(f'{BASE_URL}/delete/<int:timestamp>', methods=['DELETE'])
 @login_required
@@ -74,12 +74,12 @@ def remove_vault_entry(timestamp):
     try:
         entry = VaultEntry.query.filter_by(user_uuid=current_user.uuid).filter_by(timestamp=timestamp).first()
         if entry is None:
-            return jsonify("Entry not found"), 400
+            return jsonify({"error": "Entry not found"}), 400
 
         db.session.delete(entry)
         db.session.commit()
 
-        return jsonify("Entry removed successfully"), 201
+        return jsonify({"message": "Entry removed successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify(str(e)), 500
+        return jsonify({"error": str(e)}), 500
