@@ -1,5 +1,6 @@
 venv/
 __pycache__/
+migrations/
 *.py[cod]
 .env
 *.log
