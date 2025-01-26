@@ -1,23 +1,18 @@
-from sqlalchemy import Integer, VARCHAR, Text, ForeignKey, UniqueConstraint, BigInteger
+from sqlalchemy import Integer, VARCHAR, Text, ForeignKey, UniqueConstraint, BigInteger, Boolean
 from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
 from app import db
-import uuid
 
 class User(db.Model, UserMixin):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    uuid = mapped_column(VARCHAR(36), default=lambda: str(uuid.uuid4()), unique=True)
     email = mapped_column(VARCHAR(255), unique=True)
     hashed_password = mapped_column(VARCHAR(255))
-    salt = mapped_column(VARCHAR(24))
-    vault_key = mapped_column(VARCHAR(255))
-    recovery_key = mapped_column(VARCHAR(255))
     first_name = mapped_column(VARCHAR(255), nullable=True)
     last_name = mapped_column(VARCHAR(255), nullable=True)
 
     def to_dict(self):
         return {
-            'uuid': self.uuid,
+            'id': self.id,
             'email': self.email,
             'fist_name': self.first_name,
             'last_name': self.last_name
@@ -26,9 +21,29 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f'<User {self.email}>'
 
+class KeyChain(db.Model):
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id = mapped_column(Integer, ForeignKey('user.id'), unique=True)
+    salt = mapped_column(VARCHAR(24))
+    vault_key = mapped_column(VARCHAR(255))
+    recovery_key = mapped_column(VARCHAR(255))
+
+    def to_dict(self):
+        return {
+            'salt': self.salt,
+            'vault_key': self.vault_key,
+            'recovery_key': self.recovery_key
+        }
+class OneTimePassword(db.Model):
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id = mapped_column(Integer, db.ForeignKey('user.id'))
+    otp = mapped_column(VARCHAR(9), unique=True)
+    expires_at = mapped_column(BigInteger)
+    used = mapped_column(Boolean, default=False)
+    
 class VaultEntry(db.Model):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_uuid = mapped_column(VARCHAR(36), ForeignKey('user.uuid'))
+    user_id = mapped_column(Integer, ForeignKey('user.id'))
     timestamp = mapped_column(BigInteger)
     title = mapped_column(VARCHAR(255))
     url = mapped_column(VARCHAR(255), nullable=True)
@@ -37,7 +52,8 @@ class VaultEntry(db.Model):
     notes = mapped_column(Text, nullable=True)
 
     __table_args__ = (
-        UniqueConstraint('user_uuid', 'title', name='unique_user_title'),
+        UniqueConstraint('user_id', 'title', name='unique_user_title'),
+        UniqueConstraint('user_id', 'timestamp', name='unique_user_timestamp'),
     )
 
     def to_dict(self):

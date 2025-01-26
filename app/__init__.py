@@ -20,7 +20,9 @@ def create_app(config):
         from app import models
         from app.auth import auth_bp
         from app.vault import vault_bp
+        from app.account import account_bp
         app.register_blueprint(auth_bp)
         app.register_blueprint(vault_bp)
+        app.register_blueprint(account_bp)
 
     return app
