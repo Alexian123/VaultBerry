@@ -12,8 +12,8 @@ class User(db.Model, UserMixin):
 
     def to_dict(self):
         return {
-            'id': self.id,
             'email': self.email,
+            'password': self.hashed_password,
             'fist_name': self.first_name,
             'last_name': self.last_name
         }
@@ -34,10 +34,12 @@ class KeyChain(db.Model):
             'vault_key': self.vault_key,
             'recovery_key': self.recovery_key
         }
+
 class OneTimePassword(db.Model):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id = mapped_column(Integer, db.ForeignKey('user.id'))
     otp = mapped_column(VARCHAR(9), unique=True)
+    created_at = mapped_column(BigInteger)
     expires_at = mapped_column(BigInteger)
     used = mapped_column(Boolean, default=False)
     

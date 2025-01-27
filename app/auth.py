@@ -35,9 +35,9 @@ def get_recovery_key():
 
         # Check if cooldown expired
         now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
-        last_otp = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.expires_at.desc()).first()
-        if last_otp and last_otp.expires_at > now - (24 * 60 * 60):  # 24 hours in seconds
-            time_remaining = last_otp.expires_at - (now - (24 * 60 * 60))
+        last_otp = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.created_at.desc()).first()
+        if last_otp and last_otp.created_at > now - (60):  # change to 24 hours in seconds
+            time_remaining = last_otp.created_at - (now - (60))
             error_message = f'Please try again in {time_remaining:.0f} seconds'
             return jsonify({"error": error_message}), 400
 
@@ -47,6 +47,7 @@ def get_recovery_key():
         one_time_password = OneTimePassword(
             user_id=user.id, 
             otp=otp, 
+            created_at=now,
             expires_at=expires_at
         )
         db.session.add(one_time_password)
@@ -61,7 +62,7 @@ def recovery_login():
     try:
         data = request.json
         email = data['email']
-        otp = data['otp']
+        otp = data['password']
 
         user = User.query.filter_by(email=email).first()
         if not user:

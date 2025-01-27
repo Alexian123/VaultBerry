@@ -87,7 +87,7 @@ class AuthTestCase(unittest.TestCase):
 
         otp_login_data = {
             'email': "test@email.com",
-            "otp": response.json['otp']
+            "password": response.json['otp']
         }
 
         response = self.client.post('/recovery', json=otp_login_data)

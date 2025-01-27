@@ -1,12 +1,20 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User, KeyChain, VaultEntry
 from app import db
 
 account_bp = Blueprint('account', __name__)
 
 BASE_URL = "/account"
+
+@account_bp.route(BASE_URL, methods=['GET'])
+@login_required
+def get_account():
+    try:
+        return jsonify(current_user.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @account_bp.route(BASE_URL, methods=['POST'])
 @login_required
@@ -17,6 +25,9 @@ def update_account():
         user = User.query.filter_by(email=data['email']).first()
         if user and user.id != current_user.id:
             return jsonify({"error": "Email already in use"}), 400
+
+        if check_password_hash(user.hashed_password, data['password']):
+            return jsonify({"error": "The new password must be different from the old password"}), 400
 
         current_user.email = data['email']
         current_user.hashed_password=generate_password_hash(data['password'])
