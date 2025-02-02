@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-from app.models import User, KeyChain, VaultEntry
+from app.models import User, KeyChain, VaultEntry, OneTimePassword
 from app import db
 
 account_bp = Blueprint('account', __name__)
@@ -26,11 +26,7 @@ def update_account():
         if user and user.id != current_user.id:
             return jsonify({"error": "Email already in use"}), 400
 
-        if check_password_hash(user.hashed_password, data['password']):
-            return jsonify({"error": "The new password must be different from the old password"}), 400
-
         current_user.email = data['email']
-        current_user.hashed_password=generate_password_hash(data['password'])
         current_user.first_name = data.get('first_name')
         current_user.last_name = data.get('last_name')
         db.session.commit()
@@ -51,6 +47,10 @@ def delete_account():
         entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
         for entry in entries:
             db.session.delete(entry)
+
+        otps = OneTimePassword.query.filter_by(user_id=current_user.id).all()
+        for otp in otps:
+            db.session.delete(otp)
         
         db.session.delete(current_user)
         db.session.commit()
@@ -58,6 +58,23 @@ def delete_account():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@account_bp.route(f'{BASE_URL}/password', methods=['POST'])
+@login_required
+def change_password():
+    try:
+        data = request.json
+
+        if check_password_hash(current_user.hashed_password, data['password']):
+            return jsonify({"error": "The new password must be different from the old password"}), 400
+
+        current_user.hashed_password=generate_password_hash(data['password'])
+
+        db.session.commit()
+        return jsonify({"message": "Password changed successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 400
 
 @account_bp.route(f'{BASE_URL}/keychain', methods=['POST'])
 @login_required

@@ -13,8 +13,7 @@ class User(db.Model, UserMixin):
     def to_dict(self):
         return {
             'email': self.email,
-            'password': self.hashed_password,
-            'fist_name': self.first_name,
+            'first_name': self.first_name,
             'last_name': self.last_name
         }
 
