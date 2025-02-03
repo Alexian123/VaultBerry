@@ -18,14 +18,14 @@ class VaultTestCase(unittest.TestCase):
     def test_add_2_entries_with_equal_titles(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
 
         self.client.post('/login', json={
@@ -59,14 +59,14 @@ class VaultTestCase(unittest.TestCase):
     def test_add_2_entries_with_equal_timestamp(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
 
         self.client.post('/login', json={
@@ -99,14 +99,14 @@ class VaultTestCase(unittest.TestCase):
     def test_add_entry(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
 
         self.client.post('/login', json={
@@ -130,14 +130,14 @@ class VaultTestCase(unittest.TestCase):
     def test_delete_entry(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
 
         self.client.post('/login', json={
@@ -179,14 +179,14 @@ class VaultTestCase(unittest.TestCase):
     def test_update_entry(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
 
         self.client.post('/login', json={

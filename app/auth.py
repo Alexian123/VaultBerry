@@ -84,18 +84,19 @@ def recovery_login():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     try:
-        user_data = request.json['account']
+        account_data = request.json['account']
         keychain_data = request.json['keychain']
+        password = request.json['password']
 
-        existing_user = User.query.filter_by(email=user_data['email']).first()
+        existing_user = User.query.filter_by(email=account_data['email']).first()
         if existing_user:
             return jsonify({"error": "Email already in use"}), 400
 
         new_user = User(
-            email=user_data['email'],
-            hashed_password=generate_password_hash(user_data['password']),
-            first_name=user_data.get('first_name'),
-            last_name=user_data.get('last_name')
+            email=account_data['email'],
+            hashed_password=generate_password_hash(password),
+            first_name=account_data.get('first_name'),
+            last_name=account_data.get('last_name')
         )
         db.session.add(new_user)
         db.session.commit()

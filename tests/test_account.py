@@ -19,14 +19,14 @@ class AccountTestCase(unittest.TestCase):
     def test_update_account(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
 
@@ -38,8 +38,7 @@ class AccountTestCase(unittest.TestCase):
         self.assertIn(b'salt', response.data)
 
         response = self.client.post('/account', json={
-            'email': 'test2@email.com',
-            'password': 'test',
+            'email': 'test2@email.com'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'updated', response.data)
@@ -47,14 +46,14 @@ class AccountTestCase(unittest.TestCase):
     def test_delete_account(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
 
@@ -78,14 +77,14 @@ class AccountTestCase(unittest.TestCase):
     def test_update_keychain(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
 

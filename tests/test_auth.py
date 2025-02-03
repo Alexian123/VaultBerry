@@ -19,14 +19,14 @@ class AuthTestCase(unittest.TestCase):
     def test_get_recovery_key(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'User registered successfully', response.data)
@@ -40,14 +40,14 @@ class AuthTestCase(unittest.TestCase):
     def test_get_recovery_twice_before_cooldon(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'User registered successfully', response.data)
@@ -67,14 +67,14 @@ class AuthTestCase(unittest.TestCase):
     def test_recovery_login(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'User registered successfully', response.data)
@@ -97,14 +97,14 @@ class AuthTestCase(unittest.TestCase):
     def test_register(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
         self.assertIn(b'User registered successfully', response.data)
@@ -116,14 +116,14 @@ class AuthTestCase(unittest.TestCase):
     def test_login_success(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
 
@@ -145,14 +145,14 @@ class AuthTestCase(unittest.TestCase):
     def test_logout(self):
         response = self.client.post('/register', json={
             'account': {
-                'email': 'test@email.com',
-                'password': 'test'
+                'email': 'test@email.com'
             },
             'keychain': {
                 'salt': 'abcdefghabcdefghabcdefgh',
                 'vault_key': 'key',
                 'recovery_key': 'also key'
-            }
+            },
+            'password': 'test'
         })
         self.assertEqual(response.status_code, 201)
 
