@@ -29,7 +29,7 @@ def get_recovery_key():
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
 
-        keychain = KeyChain.query.filter_by(user_id=user.id).first()
+        keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
 
@@ -92,23 +92,23 @@ def register():
         if existing_user:
             return jsonify({"error": "Email already in use"}), 400
 
+        # Create a keychain for the new user
+        keychain = KeyChain(
+            salt=keychain_data['salt'],
+            vault_key=keychain_data['vault_key'] ,
+            recovery_key=keychain_data['recovery_key'],
+        )
+        db.session.add(keychain)
+        db.session.commit()
+
         new_user = User(
+            keychain_id=keychain.id,
             email=account_data['email'],
             hashed_password=generate_password_hash(password),
             first_name=account_data.get('first_name'),
             last_name=account_data.get('last_name')
         )
         db.session.add(new_user)
-        db.session.commit()
-
-        # Create a keychain for the new user
-        keychain = KeyChain(
-            user_id=new_user.id,
-            salt=keychain_data['salt'],
-            vault_key=keychain_data['vault_key'] ,
-            recovery_key=keychain_data['recovery_key'],
-        )
-        db.session.add(keychain)
         db.session.commit()
 
         return jsonify({"message": "User registered successfully"}), 201
@@ -131,7 +131,7 @@ def login():
             login_user(user)
 
             # Find the keychain
-            keychain = KeyChain.query.filter_by(user_id=user.id).first()
+            keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
 

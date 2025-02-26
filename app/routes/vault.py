@@ -5,9 +5,7 @@ from app import db
 
 vault_bp = Blueprint('vault', __name__)
 
-BASE_URL = "/entries"
-
-@vault_bp.route(BASE_URL, methods=['GET'])
+@vault_bp.route('', methods=['GET'])
 @login_required
 def get_vault_entries():
     try:
@@ -17,7 +15,7 @@ def get_vault_entries():
         return jsonify({"error": str(e)}), 500
 
 
-@vault_bp.route(f'{BASE_URL}/add', methods=['POST'])
+@vault_bp.route('/add', methods=['POST'])
 @login_required
 def add_vault_entry():
     try:
@@ -45,7 +43,7 @@ def add_vault_entry():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@vault_bp.route(f'{BASE_URL}/update', methods=['POST'])
+@vault_bp.route('/update', methods=['POST'])
 @login_required
 def update_vault_entry():
     try:
@@ -68,7 +66,7 @@ def update_vault_entry():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@vault_bp.route(f'{BASE_URL}/delete/<int:timestamp>', methods=['DELETE'])
+@vault_bp.route('/delete/<int:timestamp>', methods=['DELETE'])
 @login_required
 def delete_vault_entry(timestamp):
     try:

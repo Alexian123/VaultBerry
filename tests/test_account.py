@@ -1,7 +1,6 @@
 import unittest
 from app.config import TestConfig
 from app import create_app, db
-from app.models import User
 
 class AccountTestCase(unittest.TestCase):
 

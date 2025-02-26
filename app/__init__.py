@@ -18,11 +18,9 @@ def create_app(config):
 
     with app.app_context():
         from app import models
-        from app.auth import auth_bp
-        from app.vault import vault_bp
-        from app.account import account_bp
+        from app.routes import vault_bp, auth_bp, account_bp
         app.register_blueprint(auth_bp)
-        app.register_blueprint(vault_bp)
-        app.register_blueprint(account_bp)
+        app.register_blueprint(vault_bp, url_prefix='/entries')
+        app.register_blueprint(account_bp, url_prefix='/account')
 
     return app

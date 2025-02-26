@@ -6,9 +6,7 @@ from app import db
 
 account_bp = Blueprint('account', __name__)
 
-BASE_URL = "/account"
-
-@account_bp.route(BASE_URL, methods=['GET'])
+@account_bp.route('', methods=['GET'])
 @login_required
 def get_account():
     try:
@@ -16,7 +14,7 @@ def get_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@account_bp.route(BASE_URL, methods=['POST'])
+@account_bp.route('', methods=['POST'])
 @login_required
 def update_account():
     try:
@@ -24,7 +22,7 @@ def update_account():
 
         user = User.query.filter_by(email=data['email']).first()
         if user and user.id != current_user.id:
-            return jsonify({"error": "Email already in use"}), 400
+            return jsonify({"error": "Email associated with an existing account"}), 400
 
         current_user.email = data['email']
         current_user.first_name = data.get('first_name')
@@ -35,11 +33,11 @@ def update_account():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-@account_bp.route(BASE_URL, methods=['DELETE'])
+@account_bp.route('', methods=['DELETE'])
 @login_required
 def delete_account():
     try:
-        keychain = KeyChain.query.filter_by(user_id=current_user.id).first()
+        keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
         db.session.delete(keychain)
@@ -59,7 +57,7 @@ def delete_account():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@account_bp.route(f'{BASE_URL}/password', methods=['POST'])
+@account_bp.route('/password', methods=['POST'])
 @login_required
 def change_password():
     try:
@@ -76,13 +74,13 @@ def change_password():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-@account_bp.route(f'{BASE_URL}/keychain', methods=['POST'])
+@account_bp.route('/keychain', methods=['POST'])
 @login_required
 def update_keychain():
     try:
         data = request.json
 
-        keychain = KeyChain.query.filter_by(user_id=current_user.id).first()
+        keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
 
