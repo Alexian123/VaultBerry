@@ -3,8 +3,11 @@ from sqlalchemy.orm import mapped_column
 from app import db
 
 class VaultEntry(db.Model):
+    
+    __tablename__ = 'vault_entry'
+    
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id = mapped_column(Integer, ForeignKey('user.id'))
+    user_id = mapped_column(Integer, ForeignKey('users.id'))
     timestamp = mapped_column(BigInteger)
     title = mapped_column(VARCHAR(255))
     url = mapped_column(VARCHAR(255), nullable=True)
@@ -19,17 +22,6 @@ class VaultEntry(db.Model):
 
     def to_dict(self):
         return {
-            'timestamp': self.timestamp,
-            'title': self.title,
-            'url': self.url,
-            'encrypted_username': self.encrypted_username,
-            'encrypted_password': self.encrypted_password,
-            'notes': self.notes
-        }
-    
-    def to_dict_full(self):
-        return {
-            'id': self.id,
             'timestamp': self.timestamp,
             'title': self.title,
             'url': self.url,

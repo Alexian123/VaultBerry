@@ -1,0 +1,1 @@
+from .admin_model_view import AdminModelView

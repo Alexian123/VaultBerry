@@ -1,24 +1,15 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import User, KeyChain, OneTimePassword
+from app.util import generate_password_hash, check_password_hash, generate_otp
 from app import db, login_manager
 import datetime
-import secrets
 
 auth_bp = Blueprint('auth', __name__)
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
-
-@auth_bp.route('/users')
-def get_users():
-    try:
-        users = User.query.all()
-        return jsonify({"users": [user.to_dict() for user in users]}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
 @auth_bp.route('/recovery', methods=['GET'])
 def get_recovery_key():
@@ -42,7 +33,7 @@ def get_recovery_key():
             return jsonify({"error": error_message}), 400
 
         # Generate OTP
-        otp = ''.join([str(secrets.randbelow(10)) for _ in range(9)])
+        otp = generate_otp()
         expires_at = now + (5 * 60)  # 5 minutes in seconds
         one_time_password = OneTimePassword(
             user_id=user.id, 

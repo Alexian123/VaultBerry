@@ -2,7 +2,9 @@ import os
 
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Strict'
+    ADMIN_EMAIL = 'admin'
+    ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 class DevConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
