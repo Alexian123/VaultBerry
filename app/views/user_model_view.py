@@ -6,5 +6,6 @@ class UserModelView(AdminModelView):
         'email',
         'first_name',
         'last_name',
-        'is_admin'
+        'is_admin',
+        'created_at'
     )

@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required
 from app.models import User, KeyChain, OneTimePassword
-from app.util import generate_password_hash, check_password_hash, generate_otp
+from app.util import generate_password_hash, check_password_hash, generate_otp, get_now_timestamp
 from app import db, login_manager
-import datetime
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -25,7 +24,7 @@ def get_recovery_key():
             return jsonify({"error": "Inexistent keychain"}), 400
 
         # Check if cooldown expired
-        now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+        now = get_now_timestamp()
         last_otp = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.created_at.desc()).first()
         if last_otp and last_otp.created_at > now - (60):  # change to 24 hours in seconds
             time_remaining = last_otp.created_at - (now - (60))
@@ -61,7 +60,7 @@ def recovery_login():
 
         # Check OTP
         one_time_password = OneTimePassword.query.filter_by(otp=otp, user_id=user.id).first()
-        now = int(datetime.datetime.now(datetime.timezone.utc).timestamp())
+        now = get_now_timestamp
         if one_time_password and not one_time_password.used and one_time_password.expires_at > now:
             one_time_password.used = True
             db.session.commit()
@@ -97,7 +96,8 @@ def register():
             email=account_data['email'],
             hashed_password=generate_password_hash(password),
             first_name=account_data.get('first_name'),
-            last_name=account_data.get('last_name')
+            last_name=account_data.get('last_name'),
+            created_at=get_now_timestamp()
         )
         db.session.add(new_user)
         db.session.commit()

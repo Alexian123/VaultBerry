@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, VARCHAR, ForeignKey, Boolean
+from sqlalchemy import Integer, VARCHAR, ForeignKey, Boolean, BigInteger
 from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
 from app import db
@@ -14,10 +14,4 @@ class User(db.Model, UserMixin):
     first_name = mapped_column(VARCHAR(255), nullable=True)
     last_name = mapped_column(VARCHAR(255), nullable=True)
     is_admin = mapped_column(Boolean, default=False)
-
-    def to_dict(self):
-        return {
-            'email': self.email,
-            'first_name': self.first_name,
-            'last_name': self.last_name
-        }
+    created_at = mapped_column(BigInteger)
