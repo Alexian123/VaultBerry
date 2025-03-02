@@ -1,6 +1,7 @@
 from flask_admin.contrib.sqla import ModelView
-from flask_login import current_user
+from flask_login import login_required
 from flask import redirect, url_for
+from app.util import admin_required
 
 class AdminModelView(ModelView):
     
@@ -8,8 +9,7 @@ class AdminModelView(ModelView):
     can_edit = False
     can_delete = False
     
+    @login_required
+    @admin_required
     def is_accessible(self):
-        return current_user.is_authenticated and current_user.is_admin
-
-    def inaccessible_callback(self, name, **kwargs):
-        return redirect(url_for('admin_login'))
+        return True

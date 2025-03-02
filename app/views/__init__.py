@@ -1,1 +1,5 @@
 from .admin_model_view import AdminModelView
+from .keychain_model_view import KeyChainModelView
+from .otp_model_view import OTPModelView
+from .user_model_view import UserModelView
+from .vaultentry_model_view import VaultEntryModelView
