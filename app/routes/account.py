@@ -10,7 +10,7 @@ account_bp = Blueprint('account', __name__)
 @login_required
 def get_account():
     try:
-        return jsonify(current_user.to_dict()), 200
+        return jsonify(current_user.account_dict()), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

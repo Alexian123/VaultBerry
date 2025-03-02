@@ -15,3 +15,10 @@ class User(db.Model, UserMixin):
     last_name = mapped_column(VARCHAR(255), nullable=True)
     is_admin = mapped_column(Boolean, default=False)
     created_at = mapped_column(BigInteger)
+    
+    def account_dict(self):
+        return {
+            'email': self.email,
+            'first_name': self.first_name,
+            'last_name': self.last_name
+        }

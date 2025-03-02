@@ -4,10 +4,12 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.menu import MenuLink
+from flask_mail import Mail
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+mail = Mail()
 
 def create_app(config):
     app = Flask(__name__, template_folder='templates')
@@ -16,8 +18,8 @@ def create_app(config):
     
     db.init_app(app)
     migrate.init_app(app, db)
-    
     login_manager.init_app(app)
+    mail.init_app(app)
 
     with app.app_context():
         from app import models

@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required
+from flask_mail import Message
 from app.models import User, KeyChain, OneTimePassword
 from app.util import generate_password_hash, check_password_hash, generate_otp, get_now_timestamp
-from app import db, login_manager
+from app import db, login_manager, mail
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -11,17 +12,13 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 @auth_bp.route('/recovery', methods=['GET'])
-def get_recovery_key():
+def get_recovery_otp():
     try:
         email = request.args.get('email')
 
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
-
-        keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
-        if not keychain:
-            return jsonify({"error": "Inexistent keychain"}), 400
 
         # Check if cooldown expired
         now = get_now_timestamp()
@@ -42,8 +39,13 @@ def get_recovery_key():
         )
         db.session.add(one_time_password)
         db.session.commit()
+        
+        msg = Message('Your Recovery OTP', recipients=[email])
+        msg.body = f'Your OTP is: {otp}'
+        msg.html = f"<p>Your OTP is: <strong>{otp}</strong></p>"
+        mail.send(msg)
 
-        return jsonify({"otp": otp, "recovery_key": keychain.recovery_key, "salt": keychain.salt}), 200
+        return jsonify({'message': 'OTP sent successfully'}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -60,12 +62,17 @@ def recovery_login():
 
         # Check OTP
         one_time_password = OneTimePassword.query.filter_by(otp=otp, user_id=user.id).first()
-        now = get_now_timestamp
+        now = get_now_timestamp()
         if one_time_password and not one_time_password.used and one_time_password.expires_at > now:
+            keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
+            if not keychain:
+                return jsonify({"error": "Inexistent keychain"}), 400
+            
             one_time_password.used = True
             db.session.commit()
             login_user(user)
-            return jsonify({"message": "Recovery login successful"}), 200
+            
+            return jsonify(keychain.to_dict()), 200
 
         return jsonify({'error': 'Invalid or expired OTP.'}), 401
     except Exception as e:
@@ -119,13 +126,12 @@ def login():
         
         # Check if password is correct
         if user and check_password_hash(user.hashed_password, password):
-            login_user(user)
-
-            # Find the keychain
+             # Find the keychain
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
-
+            
+            login_user(user)
             return jsonify(keychain.to_dict()), 200
         else:
             return jsonify({"error": "Invalid credentials"}), 401
