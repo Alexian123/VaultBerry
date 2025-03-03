@@ -30,7 +30,10 @@ def create_app(config):
         db.create_all()
         
         if not app.config.get('TESTING', False):
-            create_admin_user(app.config.get('ADMIN_PASSWORD', 'admin'))
+            create_admin_user(
+                app.config.get('ADMIN_EMAIL', 'admin'),
+                app.config.get('ADMIN_PASSWORD', 'admin')
+            )
         
         app.register_blueprint(auth_bp)
         app.register_blueprint(vault_bp, url_prefix='/entries')

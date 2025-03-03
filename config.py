@@ -4,10 +4,10 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_COOKIE_SAMESITE = 'Strict'
     
-    ADMIN_EMAIL = 'admin'
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
     
-    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = 465
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True

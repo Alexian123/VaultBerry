@@ -14,7 +14,7 @@ Clone the [VaultBerry repository](https://github.com/Alexian123/VaultBerry).
 
 ### Environment
 
-Create the **.env** file in the root of the project with your environment preferences, or use the following example:
+Create the **.env** file in the root of the project with your environment preferences, or use the following example (NOT FOR PRODUCTION!):
 
 ```
 POSTGRES_USER=user
@@ -28,6 +28,13 @@ SECRET_KEY=mysecretkey
 FLASK_APP=run:app
 FLASK_ENV=development
 FLASK_DEBUG=1
+
+ADMIN_EMAIL=admin@example.com       # email for the admin user
+ADMIN_PASSWORD=admin                # password for the admin user
+
+MAIL_SERVER=<mail_server>   # example: smtp.gmail.com
+MAIL_USERNAME=<your_email_address>
+MAIL_PASSWORD=<your_email_password>
 ```
 
 ### Build

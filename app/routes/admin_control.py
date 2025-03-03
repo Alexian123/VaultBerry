@@ -1,9 +1,7 @@
 from flask import Blueprint, jsonify, request, redirect, url_for, render_template
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user
 from app.models import User
 from app.util import check_password_hash, admin_required
-from app.config import BaseConfig
-from app import db
 
 admin_control_bp = Blueprint('admin_control', __name__)
 
@@ -11,7 +9,7 @@ admin_control_bp = Blueprint('admin_control', __name__)
 def admin_login():
     if request.method == 'POST':
         try:
-            email = BaseConfig.ADMIN_EMAIL
+            email = request.form['email']
             password = request.form['password']
 
             user = User.query.filter_by(email=email).first()
@@ -31,7 +29,6 @@ def admin_login():
     return render_template('admin_login.html')
 
 @admin_control_bp.route('/logout', methods=['GET'])
-@login_required
 @admin_required
 def admin_logout():
     try:    

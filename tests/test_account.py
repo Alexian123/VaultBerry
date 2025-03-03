@@ -1,5 +1,5 @@
 import unittest
-from app.config import TestConfig
+from config import TestConfig
 from app import create_app, db
 
 class AccountTestCase(unittest.TestCase):
