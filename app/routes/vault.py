@@ -54,10 +54,10 @@ def update_vault_entry():
             return jsonify({"error": "Entry not found"}), 400
 
         entry.title = data['title']
-        entry.url = data.get('url')
-        entry.encrypted_password = data.get('encrypted_password')
-        entry.encrypted_username = data.get('encrypted_username')
-        entry.notes = data.get('notes')
+        entry.url = data.get('url', entry.url)
+        entry.encrypted_password = data.get('encrypted_password', entry.encrypted_password)
+        entry.encrypted_username = data.get('encrypted_username', entry.encrypted_username)
+        entry.notes = data.get('notes', entry.notes)
 
         db.session.commit()
         

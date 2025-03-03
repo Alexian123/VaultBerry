@@ -1,5 +1,26 @@
 # VaultBerry - Backend
 
+## API Endpoints
+
+> Return body for failed requests: ```{"error": "some error message"}```
+
+| Name             | Method | Route                     | Request Args   | Request Body | Success Code | Error Code(s) | Successful Return Body | 
+| :--------------- | :----: | :------------------------ | :------------- | :----------- | :----------: | :-----------: | :--------------------- |
+| Register         | POST   | /register                 | -              | ```{"account": {`"email": "test@email.com"}, "keychain": {"salt": "abcdefghabcdefghabcdefgh", "vault_key": "test key", "recovery_key": "test recovery key"}, "password": "test"}``` | 201 | 400 | ```{"message": "User registered successfully"}``` |
+| Login            | POST   | /login                    | -              | ```{"email": "test@email.com", "password": "test"}``` | 200 | 400, 401 | ```{"salt": "abcdefghabcdefghabcdefgh", "vault_key": "test key", "recovery_key": "test recovery key"}``` |
+| Logout           | POST   | /logout                   | -              | - | 200 | 400 | ```{"message": "Logout successful"}``` |
+| GetRecoveryOTP   | GET    | /recovery                 | email (String) | - | 200 | 400, 401 | ```{"message": "OTP sent successfully"}``` |
+| RecoveryLogin    | POST   | /recovery                 | -              | ```{"email": "test@email.com", "password": "123456789"}``` | 200 | 400, 401 | ```{"salt": "abcdefghabcdefghabcdefgh", "vault_key": "test key", "recovery_key": "test recovery key"}``` |
+| GetAccount       | GET    | /account                  | -              | - | 200 | 400 | ```{"email": "example@email.com", "first_name": "John", "last_name": "Doe"}``` |
+| UpdateAccount    | PUT    | /account                  | -              | ```{"email": "example@email.com", "first_name": "John", "last_name": "Doe"}``` | 201 | 400 | ```{"message": "Account updated successfully"}```|
+| DeleteAccount    | DELETE | /account                  | -              | - | 201 | 400, 500 | ```{"message": "Account deleted successfully"}``` |
+| ChangePassword   | PUT    | /account/password         | -              | ```{"password": "test"}``` | 201 | 400 | ```{"message": "Password changed successfully"}``` |
+| UpdateKeyChain   | PUT    | /account/keychain         | -              | ```{"salt": "abcdefghabcdefghabcdefgh", "vault_key": "test key", "recovery_key": "test recovery key"}``` | 201 | 400 | ```{"message": "Keychain updated successfully"}``` |
+| GetVaultEntries  | GET    | /entries                  | -              | - | 200 | 500 | ```[{"timestamp": 15188, "title": "Account 1", "url": "www.website.com", "encrypted_username": "cvnuruw3r35df!@$5", "encrypted_password": "-05=?>2tglov", "notes": "lorem ipsum"}, ...]``` |
+| AddVaultEntry    | POST   | /entries                  | -              | ```{"timestamp": 15188, "title": "Account 1", "url": "www.website.com", "encrypted_username": "cvnuruw3r35df!@$5", "encrypted_password": "-05=?>2tglov", "notes": "lorem ipsum"}``` | 201 | 400, 500 | ```{"message": "Entry added successfully"}``` |
+| UpdateVaultEntry | PUT    | /entries                  | -              | ```{"timestamp": 15188, "title": "Account 1", "url": "www.website.com", "encrypted_username": "cvnuruw3r35df!@$5", "encrypted_password": "-05=?>2tglov", "notes": "lorem ipsum"}``` | 201 | 400, 500 | ```{"message": "Entry modified successfully"}``` |
+| DeleteVaultEntry | DELETE | /entries/\<int:timestamp> | -              | - | 201 | 400, 500 | ```{"message": "Entry deleted successfully"}``` |
+
 ## Deployment
 
 ### Repository
