@@ -14,7 +14,7 @@ def get_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@account_bp.route('', methods=['POST'])
+@account_bp.route('', methods=['PUT'])
 @login_required
 def update_account():
     try:
@@ -25,8 +25,8 @@ def update_account():
             return jsonify({"error": "Email associated with an existing account"}), 400
 
         current_user.email = data['email']
-        current_user.first_name = data.get('first_name')
-        current_user.last_name = data.get('last_name')
+        current_user.first_name = data.get('first_name', current_user.first_name)
+        current_user.last_name = data.get('last_name', current_user.last_name)
         db.session.commit()
         return jsonify({"message": "Account updated successfully"}), 201
     except Exception as e:
@@ -57,7 +57,7 @@ def delete_account():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@account_bp.route('/password', methods=['POST'])
+@account_bp.route('/password', methods=['PUT'])
 @login_required
 def change_password():
     try:
@@ -74,7 +74,7 @@ def change_password():
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
 
-@account_bp.route('/keychain', methods=['POST'])
+@account_bp.route('/keychain', methods=['PUT'])
 @login_required
 def update_keychain():
     try:

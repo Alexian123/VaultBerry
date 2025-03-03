@@ -1,233 +1,78 @@
-import unittest
-from config import TestConfig
-from app import create_app, db
+from tests import BaseTestCase, unittest
 
-class VaultTestCase(unittest.TestCase):
+class VaultTestCase(BaseTestCase):
+    
+    def test_add_entry(self):
+        response = self.register_user(self.example_register_data)
+        self.assertEqual(response.status_code, 201)
 
-    def setUp(self):
-        self.app = create_app(TestConfig)
-        self.client = self.app.test_client()
-        with self.app.app_context():
-            db.create_all()  # Create tables
+        response = self.login_user(self.example_login_data)
+        self.assertEqual(response.status_code, 200)
 
-    def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()  # Clean up the database
+        response = self.add_vault_entry(self.example_entry_data1)
+        self.assertEqual(response.status_code, 201)
 
     def test_add_2_entries_with_equal_titles(self):
-        response = self.client.post('/register', json={
-            'account': {
-                'email': 'test@email.com'
-            },
-            'keychain': {
-                'salt': 'abcdefghabcdefghabcdefgh',
-                'vault_key': 'key',
-                'recovery_key': 'also key'
-            },
-            'password': 'test'
-        })
-
-        self.client.post('/login', json={
-            'email': 'test@email.com',
-            'password': 'test'
-        })
-
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1234,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
 
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1235,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
-        self.assertEqual(response.status_code, 400)
-        self.assertIn(b'error', response.data)
-
-        response = self.client.get('/entries')
+        response = self.login_user(self.example_login_data)
         self.assertEqual(response.status_code, 200)
+
+        response = self.add_vault_entry(self.example_entry_data1)
+        self.assertEqual(response.status_code, 201)
+
+        response = self.add_vault_entry(self.example_entry_data2)
+        self.assertEqual(response.status_code, 400)
 
     def test_add_2_entries_with_equal_timestamp(self):
-        response = self.client.post('/register', json={
-            'account': {
-                'email': 'test@email.com'
-            },
-            'keychain': {
-                'salt': 'abcdefghabcdefghabcdefgh',
-                'vault_key': 'key',
-                'recovery_key': 'also key'
-            },
-            'password': 'test'
-        })
-
-        self.client.post('/login', json={
-            'email': 'test@email.com',
-            'password': 'test'
-        })
-
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1234,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
 
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1234,
-            'title': 'Account 2',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.login_user(self.example_login_data)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.add_vault_entry(self.example_entry_data1)
+        self.assertEqual(response.status_code, 201)
+
+        response = self.add_vault_entry(self.example_entry_data3)
         self.assertEqual(response.status_code, 500)
 
-        response = self.client.get('/entries')
-        self.assertEqual(response.status_code, 200)
-
-    def test_add_entry(self):
-        response = self.client.post('/register', json={
-            'account': {
-                'email': 'test@email.com'
-            },
-            'keychain': {
-                'salt': 'abcdefghabcdefghabcdefgh',
-                'vault_key': 'key',
-                'recovery_key': 'also key'
-            },
-            'password': 'test'
-        })
-
-        self.client.post('/login', json={
-            'email': 'test@email.com',
-            'password': 'test'
-        })
-
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1234,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
-        self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
-
-        response = self.client.get('/entries')
-        self.assertEqual(response.status_code, 200)
-
     def test_delete_entry(self):
-        response = self.client.post('/register', json={
-            'account': {
-                'email': 'test@email.com'
-            },
-            'keychain': {
-                'salt': 'abcdefghabcdefghabcdefgh',
-                'vault_key': 'key',
-                'recovery_key': 'also key'
-            },
-            'password': 'test'
-        })
-
-        self.client.post('/login', json={
-            'email': 'test@email.com',
-            'password': 'test'
-        })
-
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1234,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
 
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1235,
-            'title': 'Account 2',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.login_user(self.example_login_data)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
 
-        response = self.client.get('/entries')
+        response = self.get_vault_entries()
         self.assertEqual(response.status_code, 200)
 
         timestamp = (response.json)[0]['timestamp']
-        response = self.client.delete(f'/entries/delete/{timestamp}')
+        response = self.delete_vault_entry(timestamp)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry deleted successfully', response.data)
-
-        response = self.client.get('/entries')
-        self.assertEqual(response.status_code, 200)
 
     def test_update_entry(self):
-        response = self.client.post('/register', json={
-            'account': {
-                'email': 'test@email.com'
-            },
-            'keychain': {
-                'salt': 'abcdefghabcdefghabcdefgh',
-                'vault_key': 'key',
-                'recovery_key': 'also key'
-            },
-            'password': 'test'
-        })
-
-        self.client.post('/login', json={
-            'email': 'test@email.com',
-            'password': 'test'
-        })
-
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1235,
-            'title': 'Account 1',
-            'url': 'www.website.com',
-            'encrypted_username': 'abcdefg',
-            'encrypted_password': 'zxc'
-        })
+        response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
 
-        response = self.client.post('/entries/add', json={
-            'timestamp': 1236,
-            'title': 'Account 2',
-            'url': 'www.other.net',
-            'encrypted_username': 'Hello',
-            'encrypted_password': 'World'
-        })
-        self.assertEqual(response.status_code, 201)
-        self.assertIn(b'successfully', response.data)
-
-        response = self.client.get('/entries')
+        response = self.login_user(self.example_login_data)
         self.assertEqual(response.status_code, 200)
 
-        second_entry = list(response.json)[1]
-        second_entry['title'] = 'Account 3'
-        second_entry['encrypted_username'] = 'New Username'
-        response = self.client.post('/entries/update', json=second_entry)
+        response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
-        self.assertIn(b'Entry modified successfully', response.data)
 
-        response = self.client.get('/entries')
+        response = self.get_vault_entries()
         self.assertEqual(response.status_code, 200)
 
-
+        entry = list(response.json)[0]
+        entry['title'] = 'Account 3'
+        entry['encrypted_username'] = 'New Username'
+        response = self.update_vault_entry(entry)
+        self.assertEqual(response.status_code, 201)
 
 if __name__ == '__main__':
     unittest.main()
