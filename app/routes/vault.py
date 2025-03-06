@@ -61,7 +61,7 @@ def update_vault_entry():
 
         db.session.commit()
         
-        return jsonify({"message": "Entry modified successfully"}), 201
+        return jsonify({"message": "Entry updated successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
