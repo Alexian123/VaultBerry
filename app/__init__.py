@@ -12,7 +12,7 @@ login_manager = LoginManager()
 mail = Mail()
 
 def create_app(config):
-    app = Flask(__name__, template_folder='templates')
+    app = Flask(__name__, template_folder='../templates')
 
     app.config.from_object(config)
     
@@ -25,7 +25,7 @@ def create_app(config):
         from app import models
         from app.util.admin_utils import create_admin_user
         from app.routes import vault_bp, auth_bp, account_bp, admin_control_bp
-        from app.views import UserModelView, KeyChainModelView, VaultEntryModelView, OTPModelView
+        from app.views import AdminHomeView, UserModelView, KeyChainModelView, VaultEntryModelView, OTPModelView
         
         db.create_all()
         
@@ -40,7 +40,7 @@ def create_app(config):
         app.register_blueprint(account_bp, url_prefix='/account')
         app.register_blueprint(admin_control_bp, url_prefix='/admin')
         
-        admin = Admin(app, name='VaultBerry Admin', template_mode='bootstrap3')
+        admin = Admin(app, name='VaultBerry Admin', template_mode='bootstrap3', index_view=AdminHomeView())
         admin.add_view(UserModelView(models.User, db.session, category='Tables'))
         admin.add_view(KeyChainModelView(models.KeyChain, db.session, category='Tables'))
         admin.add_view(VaultEntryModelView(models.VaultEntry, db.session, category='Tables'))

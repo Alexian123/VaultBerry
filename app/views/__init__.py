@@ -1,3 +1,4 @@
+from .admin_home_view import AdminHomeView
 from .admin_model_view import AdminModelView
 from .keychain_model_view import KeyChainModelView
 from .otp_model_view import OTPModelView
