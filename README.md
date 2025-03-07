@@ -1,26 +1,5 @@
 # VaultBerry - Backend
 
-## API Endpoints
-
-> Return body for failed requests: ```{"error": "some error message"}```
-
-| Name             | Method | Route                     | Request Args   | Request Body | Success Code | Error Code(s) | Successful Return Body | 
-| :--------------- | :----: | :------------------------ | :------------- | :----------- | :----------: | :-----------: | :--------------------- |
-| Register         | POST   | /register                 | -              | ```{```<br>&nbsp;&nbsp;```"account": {```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"email": "test@email.com"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```"keychain": {```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```"password": "test"```<br>```}``` | 201 | 400 | ```{"message": "User registered successfully"}``` |
-| Login            | POST   | /login                    | -              | ```{```<br>&nbsp;&nbsp;```"email": "test@email.com",```<br>&nbsp;&nbsp;```"password": "test"```<br>```}``` | 200 | 400, 401 | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` |
-| Logout           | POST   | /logout                   | -              | - | 200 | 400 | ```{"message": "Logout successful"}``` |
-| GetRecoveryOTP   | GET    | /recovery                 | email (String) | - | 200 | 400, 401 | ```{"message": "OTP sent successfully"}``` |
-| RecoveryLogin    | POST   | /recovery                 | -              | ```{```<br>&nbsp;&nbsp;```"email": "test@email.com",```<br>&nbsp;&nbsp;```"password": "123456789"```<br>```}``` | 200 | 400, 401 | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` |
-| GetAccount       | GET    | /account                  | -              | - | 200 | 400 | ```{```<br>&nbsp;&nbsp;```"email": "example@email.com",```<br>&nbsp;&nbsp;```"first_name": "John",```<br>&nbsp;&nbsp;```"last_name": "Doe"```<br>```}``` |
-| UpdateAccount    | PUT    | /account                  | -              | ```{```<br>&nbsp;&nbsp;```"email": "example@email.com",```<br>&nbsp;&nbsp;```"first_name": "John",```<br>&nbsp;&nbsp;```"last_name": "Doe"```<br>```}``` | 201 | 400 | ```{"message": "Account updated successfully"}```|
-| DeleteAccount    | DELETE | /account                  | -              | - | 201 | 400, 500 | ```{"message": "Account deleted successfully"}``` |
-| ChangePassword   | PUT    | /account/password         | -              | ```{"password": "test"}``` | 201 | 400 | ```{"message": "Password changed successfully"}``` |
-| UpdateKeyChain   | PUT    | /account/keychain         | -              | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` | 201 | 400 | ```{"message": "Keychain updated successfully"}``` |
-| GetVaultEntries  | GET    | /entries                  | -              | - | 200 | 500 | ```[```<br>&nbsp;&nbsp;```{```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```...```<br>```]``` |
-| AddVaultEntry    | POST   | /entries                  | -              | ```{```<br>&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>```}``` | 201 | 400, 500 | ```{"message": "Entry added successfully"}``` |
-| UpdateVaultEntry | PUT    | /entries                  | -              | ```{```<br>&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>```}``` | 201 | 400, 500 | ```{"message": "Entry updated successfully"}``` |
-| DeleteVaultEntry | DELETE | /entries/\<int:timestamp> | -              | - | 201 | 400, 500 | ```{"message": "Entry deleted successfully"}``` |
-
 ## Deployment
 
 ### Repository
@@ -121,3 +100,31 @@ Use the **run_tests.sh** script to run all properly defined test cases:
 sh run_tests.sh
 ```
 
+## API Endpoints
+
+> Return body for failed requests: ```{"error": "some error message"}```
+
+| Name             | Method | Route                     | Request Args   | Request Body | Success Code | Error Code(s) | Successful Return Body | 
+| :--------------- | :----: | :------------------------ | :------------- | :----------- | :----------: | :-----------: | :--------------------- |
+| Register         | POST   | /register                 | -              | ```{```<br>&nbsp;&nbsp;```"account": {```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"email": "test@email.com"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```"keychain": {```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```"password": "test"```<br>```}``` | 201 | 400 | ```{"message": "User registered successfully"}``` |
+| Login            | POST   | /login                    | -              | ```{```<br>&nbsp;&nbsp;```"email": "test@email.com",```<br>&nbsp;&nbsp;```"password": "test"```<br>```}``` | 200 | 400, 401 | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` |
+| Logout           | POST   | /logout                   | -              | - | 200 | 400 | ```{"message": "Logout successful"}``` |
+| GetRecoveryOTP   | GET    | /recovery                 | email (String) | - | 200 | 400, 401 | ```{"message": "OTP sent successfully"}``` |
+| RecoveryLogin    | POST   | /recovery                 | -              | ```{```<br>&nbsp;&nbsp;```"email": "test@email.com",```<br>&nbsp;&nbsp;```"password": "123456789"```<br>```}``` | 200 | 400, 401 | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` |
+| GetAccount       | GET    | /account                  | -              | - | 200 | 400 | ```{```<br>&nbsp;&nbsp;```"email": "example@email.com",```<br>&nbsp;&nbsp;```"first_name": "John",```<br>&nbsp;&nbsp;```"last_name": "Doe"```<br>```}``` |
+| UpdateAccount    | PUT    | /account                  | -              | ```{```<br>&nbsp;&nbsp;```"email": "example@email.com",```<br>&nbsp;&nbsp;```"first_name": "John",```<br>&nbsp;&nbsp;```"last_name": "Doe"```<br>```}``` | 201 | 400 | ```{"message": "Account updated successfully"}```|
+| DeleteAccount    | DELETE | /account                  | -              | - | 201 | 400, 500 | ```{"message": "Account deleted successfully"}``` |
+| ChangePassword   | PUT    | /account/password         | -              | ```{"password": "test"}``` | 201 | 400 | ```{"message": "Password changed successfully"}``` |
+| UpdateKeyChain   | PUT    | /account/keychain         | -              | ```{```<br>&nbsp;&nbsp;```"salt": "abcdefghabcdefghabcdefgh",```<br>&nbsp;&nbsp;```"vault_key": "test key",```<br>&nbsp;&nbsp;```"recovery_key": "test recovery key"```<br>```}``` | 201 | 400 | ```{"message": "Keychain updated successfully"}``` |
+| GetVaultEntries  | GET    | /entries                  | -              | - | 200 | 500 | ```[```<br>&nbsp;&nbsp;```{```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>&nbsp;&nbsp;```},```<br>&nbsp;&nbsp;```...```<br>```]``` |
+| AddVaultEntry    | POST   | /entries                  | -              | ```{```<br>&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>```}``` | 201 | 400, 500 | ```{"message": "Entry added successfully"}``` |
+| UpdateVaultEntry | PUT    | /entries                  | -              | ```{```<br>&nbsp;&nbsp;```"timestamp": 15188,```<br>&nbsp;&nbsp;```"title": "Account 1",```<br>&nbsp;&nbsp;```"url": "www.website.com",```<br>&nbsp;&nbsp;```"encrypted_username": "cvnuruw3r35df!@$5",```<br>&nbsp;&nbsp;```"encrypted_password": "-05=?>2tglov",```<br>&nbsp;&nbsp;```"notes": "lorem ipsum"```<br>```}``` | 201 | 400, 500 | ```{"message": "Entry updated successfully"}``` |
+| DeleteVaultEntry | DELETE | /entries/\<int:timestamp> | -              | - | 201 | 400, 500 | ```{"message": "Entry deleted successfully"}``` |
+
+## Admin Control Dashboard
+
+> Work in progress
+
+Access route **/admin/login** from your browser to login with the admin account (automatically created on the first run).
+<br>
+At the moment, you can only view the content of each table from the database.
