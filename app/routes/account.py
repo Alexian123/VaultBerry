@@ -66,11 +66,14 @@ def delete_account():
 def change_password():
     try:
         data = request.json
+        password = data['regular']
+        recovery_password = data['recovery']
 
         if security_utils.check_password_hash(current_user.hashed_password, data['password']):
             return jsonify({"error": "The new password must be different from the old password"}), 400
 
         current_user.hashed_password = security_utils.generate_password_hash(data['password'])
+        current_user.hashed_recovery_password = security_utils.generate_password_hash(data['recovery_password'])
 
         db.session.commit()
         return jsonify({"message": "Password changed successfully"}), 201
