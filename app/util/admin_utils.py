@@ -2,7 +2,8 @@ from functools import wraps
 from flask_login import current_user
 from flask import abort, redirect, url_for
 from app.models import User
-from app.util import generate_password_hash
+from app.util.security_utils import generate_password_hash
+from app.util.time_utils import get_now_timestamp
 from app import db
 
 def admin_required(f):
@@ -22,7 +23,12 @@ def create_admin_user(email, password):
             print(f'Admin already exists with email: {email}')
             return
         
-        admin = User(email=email, hashed_password=generate_password_hash(password), is_admin=True)
+        admin = User(
+            email=email, 
+            hashed_password=generate_password_hash(password), 
+            is_admin=True,
+            created_at=get_now_timestamp()
+        )
         db.session.add(admin)
         db.session.commit()
         print(f'Admin created with email: {email}')

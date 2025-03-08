@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_user, logout_user, login_required
 from flask_mail import Message
+import pyotp
 from app.models import User, KeyChain, OneTimePassword
-from app.util import generate_password_hash, check_password_hash, generate_otp, get_now_timestamp
+from app.util import security_utils, time_utils
 from app import db, login_manager, mail
 
 auth_bp = Blueprint('auth', __name__)
@@ -11,7 +12,38 @@ auth_bp = Blueprint('auth', __name__)
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-@auth_bp.route('/recovery', methods=['GET'])
+@auth_bp.route('/2fa/verify', methods=['POST'])
+def verify_2fa():
+    try:
+        data = request.json
+        email = data['email']
+        password = data['password']
+        token = data['token']
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "No user with this email exists"}), 401
+        
+        if not security_utils.check_password_hash(user.hashed_password, password):
+            return jsonify({'error': 'Invalid credentials'}), 401
+        
+        if not user.mfa_enabled:
+            return jsonify({'error': '2FA not set up'}), 400
+        
+        secret = user.get_totp_secret()
+        totp = pyotp.TOTP(secret)
+        if totp.verify(token):
+            keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
+            if not keychain:
+                return jsonify({"error": "Inexistent keychain"}), 400
+            login_user(user)
+            return jsonify(keychain.to_dict()), 200
+        
+        return jsonify({'error': 'Invalid token'}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@auth_bp.route('/recovery', methods=['POST'])
 def get_recovery_otp():
     try:
         email = request.args.get('email')
@@ -21,7 +53,7 @@ def get_recovery_otp():
             return jsonify({"error": "No user with this email exists"}), 401
 
         # Check if cooldown expired
-        now = get_now_timestamp()
+        now = time_utils.get_now_timestamp()
         last_otp = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.created_at.desc()).first()
         if last_otp and last_otp.created_at > now - (60):  # change to 24 hours in seconds
             time_remaining = last_otp.created_at - (now - (60))
@@ -29,7 +61,7 @@ def get_recovery_otp():
             return jsonify({"error": error_message}), 400
 
         # Generate OTP
-        otp = generate_otp()
+        otp = security_utils.manager.generate_otp()
         expires_at = now + (5 * 60)  # 5 minutes in seconds
         one_time_password = OneTimePassword(
             user_id=user.id, 
@@ -54,15 +86,19 @@ def recovery_login():
     try:
         data = request.json
         email = data['email']
-        otp = data['password']
+        recovery_password = data['password']
+        otp = data['token']
 
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
+        
+        if not security_utils.check_password_hash(user.hashed_recovery_password, recovery_password):
+            return jsonify({"error": "Invalid credentials"}), 401
 
         # Check OTP
         one_time_password = OneTimePassword.query.filter_by(otp=otp, user_id=user.id).first()
-        now = get_now_timestamp()
+        now = time_utils.get_now_timestamp()
         if one_time_password and not one_time_password.used and one_time_password.expires_at > now:
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
@@ -84,6 +120,7 @@ def register():
         account_data = request.json['account']
         keychain_data = request.json['keychain']
         password = request.json['password']
+        recovery_password = request.json['recovery_password']
 
         existing_user = User.query.filter_by(email=account_data['email']).first()
         if existing_user:
@@ -101,10 +138,11 @@ def register():
         new_user = User(
             keychain_id=keychain.id,
             email=account_data['email'],
-            hashed_password=generate_password_hash(password),
+            hashed_password=security_utils.generate_password_hash(password),
+            hashed_recovery_password=security_utils.generate_password_hash(recovery_password),
             first_name=account_data.get('first_name'),
             last_name=account_data.get('last_name'),
-            created_at=get_now_timestamp()
+            created_at=time_utils.get_now_timestamp()
         )
         db.session.add(new_user)
         db.session.commit()
@@ -125,11 +163,14 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         # Check if password is correct
-        if user and check_password_hash(user.hashed_password, password):
+        if user and security_utils.check_password_hash(user.hashed_password, password):
              # Find the keychain
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
+            
+            if user.mfa_enabled:
+                return jsonify({'error': '2FA required'}), 401
             
             login_user(user)
             return jsonify(keychain.to_dict()), 200

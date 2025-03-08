@@ -43,7 +43,7 @@ def add_vault_entry():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@vault_bp.route('', methods=['PUT'])
+@vault_bp.route('', methods=['PATCH'])
 @login_required
 def update_vault_entry():
     try:

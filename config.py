@@ -14,6 +14,9 @@ class BaseConfig:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
+    
+    FERNET_KEY = os.environ.get('FERNET_KEY')
+    KDF_SECRET = os.environ.get('KDF_SECRET')
 
 class DevConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')

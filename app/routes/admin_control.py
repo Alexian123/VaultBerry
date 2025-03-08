@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request, redirect, url_for, render_template, flash
+from flask import Blueprint, request, redirect, url_for, render_template, flash
 from flask_login import login_user, logout_user, current_user
 from app.models import User
-from app.util import check_password_hash, admin_required
+from app.util import admin_utils, security_utils
 
 admin_control_bp = Blueprint('admin_control', __name__)
 
@@ -17,7 +17,7 @@ def admin_login():
             user = User.query.filter_by(email=email).first()
             if not user:
                 flash("No user with this email exists.")
-            elif not check_password_hash(user.hashed_password, password):
+            elif not security_utils.check_password_hash(user.hashed_password, password):
                 flash("Invalid password.")
             elif not user.is_admin:
                 flash("User is not an admin.")
@@ -30,7 +30,7 @@ def admin_login():
     return render_template('admin_login.html')
 
 @admin_control_bp.route('/logout', methods=['GET'])
-@admin_required
+@admin_utils.admin_required
 def admin_logout():
     logout_user()
     return render_template('admin_login.html')
