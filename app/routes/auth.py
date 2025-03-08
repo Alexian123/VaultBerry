@@ -119,8 +119,7 @@ def register():
     try:
         account_data = request.json['account']
         keychain_data = request.json['keychain']
-        password = request.json['password']
-        recovery_password = request.json['recovery_password']
+        password_data = request.json['passwords']
 
         existing_user = User.query.filter_by(email=account_data['email']).first()
         if existing_user:
@@ -138,8 +137,8 @@ def register():
         new_user = User(
             keychain_id=keychain.id,
             email=account_data['email'],
-            hashed_password=security_utils.generate_password_hash(password),
-            hashed_recovery_password=security_utils.generate_password_hash(recovery_password),
+            hashed_password=security_utils.generate_password_hash(password_data['regular_password']),
+            hashed_recovery_password=security_utils.generate_password_hash(password_data['recovery_password']),
             first_name=account_data.get('first_name'),
             last_name=account_data.get('last_name'),
             created_at=time_utils.get_now_timestamp()
