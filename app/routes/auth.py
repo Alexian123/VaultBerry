@@ -27,15 +27,14 @@ def verify_2fa():
         if not security_utils.check_password_hash(user.hashed_password, password):
             return jsonify({'error': 'Invalid credentials'}), 401
         
-        if not user.mfa_enabled:
-            return jsonify({'error': '2FA not set up'}), 400
-        
-        secret = user.get_totp_secret()
-        totp = pyotp.TOTP(secret)
+        derived_key = user.get_totp_secret()
+        totp = pyotp.TOTP(derived_key)
+
         if totp.verify(token):
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
+            
             login_user(user)
             return jsonify(keychain.to_dict()), 200
         

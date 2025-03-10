@@ -116,7 +116,8 @@ def setup_2fa():
         db.session.commit()
         
         # Generate a provisioning URI
-        provisioning_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+        derived_key = current_user.get_totp_secret()
+        provisioning_uri = pyotp.totp.TOTP(derived_key).provisioning_uri(
             name=current_user.email, issuer_name="VaultBerry"
         )
         

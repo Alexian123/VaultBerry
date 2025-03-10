@@ -1,6 +1,7 @@
 from sqlalchemy import Integer, VARCHAR, ForeignKey, Boolean, BigInteger, LargeBinary
 from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
+import base64
 from app import db
 from app.util import security_utils
 
@@ -45,5 +46,5 @@ class User(db.Model, UserMixin):
     def get_totp_secret(self):
         if not self.encrypted_totp_derived_key or not self.totp_salt:
             return None
-        derived_key = security_utils.manager.decrypt_data(self.encrypted_derived_key)
-        return security_utils.manager.verify_kdf(derived_key, self.salt)
+        derived_key = security_utils.manager.decrypt_data(self.encrypted_totp_derived_key)
+        return base64.b32encode(derived_key).decode('utf-8').rstrip('=')

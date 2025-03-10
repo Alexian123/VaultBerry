@@ -38,6 +38,5 @@ class AuthTestCase(BaseTestCase):
         response = self.logout_user()
         self.assertEqual(response.status_code, 401)
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -3,27 +3,26 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import secrets
-import base64
 
 class SecurityManager:
     
     @classmethod
-    def generate_otp(digits=9):
+    def generate_otp(cls, digits=9):
         """Generates a random one-time password with digits."""
         return ''.join([str(secrets.randbelow(10)) for _ in range(digits)])
     
     @classmethod
-    def generate_salt(length=16) -> bytes:
+    def generate_salt(cls, length = 16) -> bytes:
         """Generates a cryptographically secure random salt."""
         return secrets.token_bytes(length)
     
     @classmethod
-    def generate_fernet_key() -> str:
+    def generate_fernet_key(cls) -> str:
         """Generates a Fernet key."""
         return Fernet.generate_key()
     
     @classmethod
-    def generate_kdf_secret(length=32) -> str:
+    def generate_kdf_secret(cls, length=32) -> str:
         """Generates a secret for key derivation."""
         return secrets.token_urlsafe(length)
     
@@ -61,21 +60,3 @@ class SecurityManager:
         )
         derived_key = kdf.derive(secret.encode() + self._kdf_secret.encode())
         return derived_key
-    
-    def verify_kdf(self, derived_key: bytes, salt:bytes) -> bytes:
-        """
-            Verifies consistency of KDF parameters and computes and returns the secret
-            for pyotp, base32 encoded.
-        """
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=self._kdf_iterations,
-            backend=default_backend()
-        )
-        try:
-            kdf.verify(derived_key, self._kdf_secret.encode()) # dummy verify
-            return base64.b32encode(derived_key).decode('utf-8').rstrip('=')
-        except:
-            return None

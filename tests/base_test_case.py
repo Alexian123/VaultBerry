@@ -13,12 +13,21 @@ class BaseTestCase(unittest.TestCase):
             'vault_key': 'key',
             'recovery_key': 'also key'
         },
-        'password': 'test'
+        'passwords': {
+            'regular_password': 'test',
+            'recovery_password': 'abc'
+        }
     }
     
     example_login_data = {
         'email': 'test@email.com',
         'password': 'test'
+    }
+    
+    example_2fa_login_data = {
+        'email': 'test@email.com',
+        'password': 'test',
+        'token': '000000'
     }
     
     example_account_update_data = {
@@ -82,16 +91,28 @@ class BaseTestCase(unittest.TestCase):
         return self.client.post('/entries', json=json_data)
     
     def update_vault_entry(self, json_data):
-        return self.client.put('/entries', json=json_data)
+        return self.client.patch('/entries', json=json_data)
     
     def delete_vault_entry(self, timestamp):
         return self.client.delete(f'/entries/{timestamp}')
     
     def update_account(self, json_data):
-        return self.client.put('/account', json=json_data)
+        return self.client.patch('/account', json=json_data)
     
     def delete_account(self):
         return self.client.delete('/account')
     
     def update_keychain(self, json_data):
         return self.client.put('/account/keychain', json=json_data)
+    
+    def setup_2fa(self):
+        return self.client.post('/account/2fa/setup')
+    
+    def get_2fa_status(self):
+        return self.client.get('/account/2fa/status')
+    
+    def disable_2fa(self):
+        return self.client.post('/account/2fa/disable')
+    
+    def verify_2fa(self, json_data):
+        return self.client.post('/2fa/verify', json=json_data)

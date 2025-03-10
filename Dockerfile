@@ -1,5 +1,7 @@
 FROM python:3.10-slim
 
+ENV TZ=Europe/Bucharest
+
 WORKDIR /app
 
 COPY requirements.txt .
