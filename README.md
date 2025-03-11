@@ -1,5 +1,7 @@
 # VaultBerry - Backend
 
+Official client: [VaultBerry App](https://github.com/Alexian123/VaultBerryApp)
+
 ## Deployment
 
 ### Repository
