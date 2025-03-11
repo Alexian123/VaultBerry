@@ -7,10 +7,10 @@ from app.util import security_utils
 
 class User(db.Model, UserMixin):
     
-    __tablename__ = 'users'
+    __tablename__ = 'users' # 'user' is reserved in PostgreSQL
     
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    keychain_id = mapped_column(Integer, ForeignKey('key_chain.id'), unique=True, nullable=True)
+    keychain_id = mapped_column(Integer, ForeignKey('key_chain.id'), unique=True, nullable=True)    # Null only for the admin user
     
     email = mapped_column(VARCHAR(255), unique=True)
     hashed_password = mapped_column(VARCHAR(255))
@@ -27,6 +27,7 @@ class User(db.Model, UserMixin):
     
     created_at = mapped_column(BigInteger)
     
+    # Dictionary containing only the account information
     def account_dict(self):
         return {
             'email': self.email,
@@ -35,7 +36,11 @@ class User(db.Model, UserMixin):
         }
         
     def set_totp_secret(self, secret):
-        """Derives, encrypts, and stores the TOTP secret."""
+        """Derives, encrypts, and stores the TOTP secret.
+
+        Args:
+            secret (str): The TOTP secret
+        """
         salt = security_utils.manager.generate_salt()
         derived_key = security_utils.manager.derive_key(secret, salt)
         encrypted_derived_key = security_utils.manager.encrypt_data(derived_key)
@@ -44,6 +49,11 @@ class User(db.Model, UserMixin):
         self.mfa_enabled = True
         
     def get_totp_secret(self):
+        """Fetches and decrypts the TOTP secret
+
+        Returns:
+            str: The decrypted secret
+        """
         if not self.encrypted_totp_derived_key or not self.totp_salt:
             return None
         derived_key = security_utils.manager.decrypt_data(self.encrypted_totp_derived_key)

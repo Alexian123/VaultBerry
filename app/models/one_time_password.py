@@ -7,7 +7,7 @@ class OneTimePassword(db.Model):
     
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id = mapped_column(Integer, db.ForeignKey('users.id'))
-    otp = mapped_column(VARCHAR(9))
+    otp = mapped_column(VARCHAR(9)) # Randomly generated password
     created_at = mapped_column(BigInteger)
     expires_at = mapped_column(BigInteger)
     used = mapped_column(Boolean, default=False)

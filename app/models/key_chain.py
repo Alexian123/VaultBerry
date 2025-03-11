@@ -6,9 +6,9 @@ class KeyChain(db.Model):
     __tablename__ = 'key_chain'
     
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    salt = mapped_column(VARCHAR(24))
-    vault_key = mapped_column(VARCHAR(255))
-    recovery_key = mapped_column(VARCHAR(255))
+    salt = mapped_column(VARCHAR(24))   # Base64 encoded
+    vault_key = mapped_column(VARCHAR(255)) # Encrypted and Base64 encoded
+    recovery_key = mapped_column(VARCHAR(255))  # Encrypted and Base64 encoded
 
     def to_dict(self):
         return {

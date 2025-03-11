@@ -20,17 +20,21 @@ def verify_2fa():
         password = data['password']
         token = data['token']
         
+        # Find user by email
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
         
+        # Check password before validating the token
         if not security_utils.check_password_hash(user.hashed_password, password):
             return jsonify({'error': 'Invalid credentials'}), 401
         
+        # Check the token
         derived_key = user.get_totp_secret()
         totp = pyotp.TOTP(derived_key)
-
         if totp.verify(token):
+            
+            # Find the keychain.
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
@@ -47,6 +51,7 @@ def get_recovery_otp():
     try:
         email = request.args.get('email')
 
+        # Find user by email
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
@@ -59,7 +64,7 @@ def get_recovery_otp():
             error_message = f'Please try again in {time_remaining:.0f} seconds'
             return jsonify({"error": error_message}), 400
 
-        # Generate OTP
+        # Generate a new OTP
         otp = security_utils.manager.generate_otp()
         expires_at = now + (5 * 60)  # 5 minutes in seconds
         one_time_password = OneTimePassword(
@@ -71,6 +76,7 @@ def get_recovery_otp():
         db.session.add(one_time_password)
         db.session.commit()
         
+        # Send an email containing the OTP to the user
         msg = Message('Your Recovery OTP', recipients=[email])
         msg.body = f'Your OTP is: {otp}'
         msg.html = f"<p>Your OTP is: <strong>{otp}</strong></p>"
@@ -88,10 +94,12 @@ def recovery_login():
         recovery_password = data['password']
         otp = data['token']
 
+        # Find the user by email
         user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "No user with this email exists"}), 401
         
+        # Check recovery password
         if not security_utils.check_password_hash(user.hashed_recovery_password, recovery_password):
             return jsonify({"error": "Invalid credentials"}), 401
 
@@ -99,14 +107,17 @@ def recovery_login():
         one_time_password = OneTimePassword.query.filter_by(otp=otp, user_id=user.id).first()
         now = time_utils.get_now_timestamp()
         if one_time_password and not one_time_password.used and one_time_password.expires_at > now:
+            
+            # Check keychain
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
             
+            # Mark OTP as used
             one_time_password.used = True
             db.session.commit()
-            login_user(user)
             
+            login_user(user)
             return jsonify(keychain.to_dict()), 200
 
         return jsonify({'error': 'Invalid or expired OTP.'}), 401
@@ -120,6 +131,7 @@ def register():
         keychain_data = request.json['keychain']
         password_data = request.json['passwords']
 
+        # Check if the user already exists
         existing_user = User.query.filter_by(email=account_data['email']).first()
         if existing_user:
             return jsonify({"error": "Email already in use"}), 400
@@ -133,6 +145,7 @@ def register():
         db.session.add(keychain)
         db.session.commit()
 
+        # Create the new user
         new_user = User(
             keychain_id=keychain.id,
             email=account_data['email'],
@@ -162,11 +175,13 @@ def login():
         
         # Check if password is correct
         if user and security_utils.check_password_hash(user.hashed_password, password):
+            
              # Find the keychain
             keychain = KeyChain.query.filter_by(id=user.keychain_id).first()
             if not keychain:
                 return jsonify({"error": "Inexistent keychain"}), 400
             
+            # If 2FA is enabled, the appropriate route must be used. The frontend should check for this exact error message.
             if user.mfa_enabled:
                 return jsonify({'error': '2FA required'}), 401
             

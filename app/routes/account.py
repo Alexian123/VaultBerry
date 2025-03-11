@@ -98,10 +98,12 @@ def update_keychain():
     try:
         data = request.json
 
+        # Find the keychain
         keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
 
+        # Update the keychain
         keychain.salt = data['salt']
         keychain.vault_key = data['vault_key']
         keychain.recovery_key = data['recovery_key']
@@ -147,6 +149,7 @@ def setup_2fa():
 @login_required
 def get_2fa_status():
     try:
+        # Return flag
         return jsonify({'enabled': current_user.mfa_enabled}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -155,9 +158,11 @@ def get_2fa_status():
 @login_required
 def disable_2fa():
     try:
+        # Check current status
         if not current_user.mfa_enabled:
             return jsonify({'error': '2FA not set up'}), 400
         
+        # Set flag to false. The old secret does not need to be removed
         current_user.mfa_enabled = False
         db.session.commit()
         

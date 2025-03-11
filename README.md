@@ -35,6 +35,9 @@ ADMIN_PASSWORD=admin                # password for the admin user
 MAIL_SERVER=<mail_server>   # example: smtp.gmail.com
 MAIL_USERNAME=<your_email_address>
 MAIL_PASSWORD=<your_email_password>
+
+FERNET_KEY=<encryption_key>         # Generate once using app.utils.security_utils.SecurityManager.generate_fernet_key()
+KDF_SECRET=<key_derivation_secret>  # Generate once using app.utils.security_utils.SecurityManager.generate_kdf_secret()
 ```
 
 ### Build

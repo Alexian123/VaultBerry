@@ -18,7 +18,8 @@ def admin_required(f):
     return decorated_function
 
 def create_admin_user(email, password):
-    """Create a new admin user.
+    """Create a new admin user.\n
+    The admin will not have a keychain. This will prevent logging in admin using the normal routes.
 
     Args:
         email (str): Admin email address.
