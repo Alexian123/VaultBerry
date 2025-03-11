@@ -135,3 +135,8 @@ sh run_tests.sh
 Access route **/admin/login** from your browser to login with the admin account (automatically created on the first run).
 <br>
 At the moment, you can only view the content of each table from the database.
+
+## About
+
+### Database Tables
+![drawSQL-image-export-2025-03-11](https://github.com/user-attachments/assets/85ea2a0a-5d5d-4d85-b964-815cba8d8bd1)
