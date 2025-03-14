@@ -27,24 +27,43 @@ def create_app(config):
 
     with app.app_context():
         from app import models  # ORM Models
-        from app.util import security_utils, admin_utils   # Required utilities
+        from app.util import security, get_now_timestamp  # Required utilities
         from app.routes import vault_bp, auth_bp, account_bp, admin_control_bp  # Route blueprints
         from app.views import AdminHomeView, UserModelView, KeyChainModelView, VaultEntryModelView, OTPModelView    # ModelViews
         
-        # Init the security manager (for totp secret encryption)
+        # Init the kdf and fernet components
         if not app.config.get('FERNET_KEY', False) or not app.config.get('KDF_SECRET', False):
             raise ValueError('FERNET_KEY or KDF_SECRET not set in config')
-        security_utils.manager.init(app.config.get('FERNET_KEY', ''), app.config.get('KDF_SECRET', ''))
+        fernet_key, kdf_secret = str(app.config['FERNET_KEY']), str(app.config['KDF_SECRET'])
+        security.fernet.init(fernet_key.encode())
+        security.kdf.init(kdf_secret.encode())
         
         # Create all tables
         db.create_all()
         
+        # Create the admin user if not in testing mode``
         if not app.config.get('TESTING', False):
-            # Create the admin user if not in testing mode
-            admin_utils.create_admin_user(
-                app.config.get('ADMIN_EMAIL', 'admin'),
-                app.config.get('ADMIN_PASSWORD', 'admin')
-            )
+            email = app.config.get('ADMIN_EMAIL', 'admin'),
+            password = app.config.get('ADMIN_PASSWORD', 'admin')
+            try:
+                # Check if an admin with the given email already exists
+                admin = models.User.query.filter_by(email=email).first()
+                if admin:
+                    print(f'Admin already exists with email: {email}')
+                else:
+                    # Create a new user
+                    admin = models.User(
+                        email=email, 
+                        hashed_password=security.hasher.hash(password), 
+                        is_admin=True,  # Make it an admin
+                        created_at=get_now_timestamp()
+                    )
+                    db.session.add(admin)
+                    db.session.commit()
+                    print(f'Admin created with email: {email}')
+            except Exception as e:
+                db.session.rollback()
+                print(f'Error creating admin: {str(e)}')
         
         # Register all blueprints
         app.register_blueprint(auth_bp)
@@ -53,11 +72,11 @@ def create_app(config):
         app.register_blueprint(admin_control_bp, url_prefix='/admin')
         
         # Define Admin dashboard with ModelViews
-        admin_utils = Admin(app, name='VaultBerry Admin', template_mode='bootstrap3', index_view=AdminHomeView())
-        admin_utils.add_view(UserModelView(models.User, db.session, category='Tables'))
-        admin_utils.add_view(KeyChainModelView(models.KeyChain, db.session, category='Tables'))
-        admin_utils.add_view(VaultEntryModelView(models.VaultEntry, db.session, category='Tables'))
-        admin_utils.add_view(OTPModelView(models.OneTimePassword, db.session, category='Tables'))
-        admin_utils.add_link(MenuLink(name='Logout', category='', url='/admin/logout'))
+        app_admin = Admin(app, name='VaultBerry Admin', template_mode='bootstrap3', index_view=AdminHomeView())
+        app_admin.add_view(UserModelView(models.User, db.session, category='Tables'))
+        app_admin.add_view(KeyChainModelView(models.KeyChain, db.session, category='Tables'))
+        app_admin.add_view(VaultEntryModelView(models.VaultEntry, db.session, category='Tables'))
+        app_admin.add_view(OTPModelView(models.OneTimePassword, db.session, category='Tables'))
+        app_admin.add_link(MenuLink(name='Logout', category='', url='/admin/logout'))
         
     return app

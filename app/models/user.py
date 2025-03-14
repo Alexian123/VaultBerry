@@ -3,7 +3,7 @@ from sqlalchemy.orm import mapped_column
 from flask_login import UserMixin
 import base64
 from app import db
-from app.util import security_utils
+from app.util import security
 
 class User(db.Model, UserMixin):
     
@@ -35,15 +35,15 @@ class User(db.Model, UserMixin):
             'last_name': self.last_name
         }
         
-    def set_totp_secret(self, secret):
+    def set_totp_secret(self, secret: str):
         """Derives, encrypts, and stores the TOTP secret.
 
         Args:
             secret (str): The TOTP secret
         """
-        salt = security_utils.manager.generate_salt()
-        derived_key = security_utils.manager.derive_key(secret, salt)
-        encrypted_derived_key = security_utils.manager.encrypt_data(derived_key)
+        salt = security.generator.random_bytes(16)
+        derived_key = security.kdf.derive_key(secret.encode(), salt)
+        encrypted_derived_key = security.fernet.encrypt(derived_key)
         self.encrypted_totp_derived_key = encrypted_derived_key
         self.totp_salt = salt
         self.mfa_enabled = True
@@ -56,5 +56,5 @@ class User(db.Model, UserMixin):
         """
         if not self.encrypted_totp_derived_key or not self.totp_salt:
             return None
-        derived_key = security_utils.manager.decrypt_data(self.encrypted_totp_derived_key)
+        derived_key = security.fernet.decrypt(self.encrypted_totp_derived_key)
         return base64.b32encode(derived_key).decode('utf-8').rstrip('=')

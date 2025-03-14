@@ -5,7 +5,7 @@ import qrcode
 import io
 import base64
 from app.models import User, KeyChain, VaultEntry, OneTimePassword
-from app.util import security_utils
+from app.util import security
 from app import db
 
 account_bp = Blueprint('account', __name__)
@@ -49,8 +49,7 @@ def delete_account():
         keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
-        db.session.delete(keychain)
-
+        
         # Delete all entries for the current user
         entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
         for entry in entries:
@@ -79,12 +78,12 @@ def change_password():
         recovery_password = data['recovery_password']
 
         # Check if new password is different
-        if security_utils.check_password_hash(current_user.hashed_password, password):
+        if security.hasher.check(current_user.hashed_password, password):
             return jsonify({"error": "The new password must be different from the old password"}), 400
 
         # Update the password and recovery password
-        current_user.hashed_password = security_utils.generate_password_hash(password)
-        current_user.hashed_recovery_password = security_utils.generate_password_hash(recovery_password)
+        current_user.hashed_password = security.hasher.hash(password)
+        current_user.hashed_recovery_password = security.hasher.hash(recovery_password)
 
         db.session.commit()
         return jsonify({"message": "Password changed successfully"}), 201
