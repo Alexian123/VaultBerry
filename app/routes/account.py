@@ -45,11 +45,10 @@ def update_account():
 @login_required
 def delete_account():
     try:
-        # Delete the keychain for the current user
+        # Find the keychain for the current user
         keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
-        db.session.delete(keychain)
         
         # Delete all entries for the current user
         entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
@@ -63,6 +62,10 @@ def delete_account():
         
         # Delete the user itself
         db.session.delete(current_user)
+        db.session.commit()
+        
+        # Delete the keychain after the user is deleted
+        db.session.delete(keychain)
         db.session.commit()
         
         return jsonify({"message": "Account deleted successfully"}), 201
