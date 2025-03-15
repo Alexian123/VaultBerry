@@ -49,6 +49,7 @@ def delete_account():
         keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
+        db.session.delete(keychain)
         
         # Delete all entries for the current user
         entries = VaultEntry.query.filter_by(user_id=current_user.id).all()

@@ -45,7 +45,6 @@ KDF_SECRET=<key_derivation_secret>  # Generate once using app.utils.security_uti
 ### Build
 
 Create the containers:
-
 ```sh
 docker-compose up --build
 ```
@@ -53,6 +52,11 @@ docker-compose up --build
 Upgrade database migrations:
 ```sh
 docker-compose exec web flask db upgrade
+```
+
+Generate SSL certificate:
+```sh
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 3650 -nodes -subj "/CN=192.168.1.131" -addext "subjectAltName = IP:192.168.1.131"
 ```
 
 ### Container management
