@@ -79,9 +79,11 @@ def delete_account():
 @login_required
 def change_password():
     try:
-        data = request.json
-        password = data['regular_password']
-        recovery_password = data['recovery_password']
+        password_data = request.json['passwords']
+        keychain_data = request.json['keychain']
+        
+        password = password_data['regular_password']
+        recovery_password = password_data['recovery_password']
 
         # Check if new password is different
         if security.hasher.check(current_user.hashed_password, password):
@@ -90,31 +92,19 @@ def change_password():
         # Update the password and recovery password
         current_user.hashed_password = security.hasher.hash(password)
         current_user.hashed_recovery_password = security.hasher.hash(recovery_password)
-
-        db.session.commit()
-        return jsonify({"message": "Password changed successfully"}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 400
-
-@account_bp.route('/keychain', methods=['PUT'])
-@login_required
-def update_keychain():
-    try:
-        data = request.json
-
-        # Find the keychain
+        
+        # Update the keychain
         keychain = KeyChain.query.filter_by(id=current_user.keychain_id).first()
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
-
+        
         # Update the keychain
-        keychain.salt = data['salt']
-        keychain.vault_key = data['vault_key']
-        keychain.recovery_key = data['recovery_key']
+        keychain.salt = keychain_data['salt']
+        keychain.vault_key = keychain_data['vault_key']
+        keychain.recovery_key = keychain_data['recovery_key']
 
         db.session.commit()
-        return jsonify({"message": "Keychain updated successfully"}), 201
+        return jsonify({"message": "Password changed successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400

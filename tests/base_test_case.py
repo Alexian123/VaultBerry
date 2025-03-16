@@ -34,10 +34,16 @@ class BaseTestCase(unittest.TestCase):
         'email': 'test2@email.com'
     }
     
-    example_keychain_update_data = {
-        'salt': 'abcdefghabcdefghabcdefgh',
-        'vault_key': 'key2',
-        'recovery_key': 'also key'
+    example_password_change_data = {
+        'keychain': {
+            'salt': 'abcdefghabcdefghabcdefgh',
+            'vault_key': 'key',
+            'recovery_key': 'also key'
+        },
+        'passwords': {
+            'regular_password': 'test1',
+            'recovery_password': 'abc1'
+        }
     }
     
     example_entry_data1 = {
@@ -102,8 +108,8 @@ class BaseTestCase(unittest.TestCase):
     def delete_account(self):
         return self.client.delete('/account')
     
-    def update_keychain(self, json_data):
-        return self.client.put('/account/keychain', json=json_data)
+    def change_password(self, json_data):
+        return self.client.patch('/account/password', json=json_data)
     
     def setup_2fa(self):
         return self.client.post('/account/2fa/setup')
