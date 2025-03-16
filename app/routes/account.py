@@ -50,6 +50,12 @@ def delete_account():
         if not keychain:
             return jsonify({"error": "Inexistent keychain"}), 400
         
+        # Remove the keychain id from the user
+        current_user.keychain_id = None
+        
+        # Delete the keychain after the user is deleted
+        db.session.delete(keychain)
+        
         # Delete all entries for the current user
         entries = VaultEntry.query.filter_by(user_id=current_user.id).all()
         for entry in entries:
@@ -62,12 +68,8 @@ def delete_account():
         
         # Delete the user itself
         db.session.delete(current_user)
-        db.session.commit()
         
-        # Delete the keychain after the user is deleted
-        db.session.delete(keychain)
         db.session.commit()
-        
         return jsonify({"message": "Account deleted successfully"}), 201
     except Exception as e:
         db.session.rollback()
