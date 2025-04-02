@@ -1,43 +1,63 @@
 from flask import Blueprint, request, redirect, url_for, render_template, flash
 from flask_login import login_user, logout_user, current_user
-from app.models import User
-from app.util import admin_required, security
+from scramp import ScramClient
+from app.models import User, Secret
+from app.util import admin_required
+from app import scram
 
-admin_control_bp = Blueprint('admin_control', __name__)
+admin_control_bp = Blueprint("admin_control", __name__)
 
-@admin_control_bp.route('/login', methods=['GET', 'POST'])
+@admin_control_bp.route("/login", methods=["GET", "POST"])
 def admin_login():
-    if current_user.is_authenticated and current_user.is_admin:
-        # Akready logged in
-        return redirect(url_for('admin.index'))
+    user: User = current_user
+    if user and user.is_authenticated and user.is_admin:
+        # Already logged in
+        return redirect(url_for("admin.index"))
     
-    if request.method == 'POST':
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
         try:
-            # Read data from Login form
-            email = request.form.get('email')
-            password = request.form.get('password')
-        
             # Find the user by email
-            user = User.query.filter_by(email=email).first()
+            existing_user: User = User.query.filter_by(email=email).first()
             
-            if not user:
-                flash("No user with this email exists.")
-            elif not security.hasher.check(user.hashed_password, password):
-                flash("Invalid password.")
-            elif not user.is_admin:
-                flash("User is not an admin.")
-            else: 
-                # Access granted
-                login_user(user)
-                return redirect(url_for('admin.index'))
+            if existing_user is None:
+                raise Exception("No user with this email exists.")
+            elif not existing_user.is_admin:
+                raise Exception("User is not an admin.")
+
+            # Create the SCRAM client and server
+            client, server = ScramClient(['SCRAM-SHA-256'], email, password), scram.make_server(User.get_auth_information)
+            
+            # Generate client first message
+            client_first_message = client.get_client_first()
+            
+            # Get server first message
+            server.set_client_first(client_first_message)
+            server_first_message = server.get_server_first()
+            
+            # Get client final message
+            client.set_server_first(server_first_message)
+            client_final_message = client.get_client_final()
+            
+            # Get server final message
+            server.set_client_final(client_final_message)
+            server_final_message = server.get_server_final()
+            
+            # Check server final message
+            client.set_server_final(server_final_message)
+            
+            # Access granted
+            login_user(existing_user)
+            return redirect(url_for("admin.index"))
         except Exception as e:
-            return flash(str(e))
+            flash(str(e))
     
     # HTML Login form
-    return render_template('admin_login.html')
+    return render_template("admin_login.html")
 
-@admin_control_bp.route('/logout', methods=['GET'])
+@admin_control_bp.route("/logout", methods=["GET"])
 @admin_required
 def admin_logout():
     logout_user()
-    return redirect(url_for('admin.index'))
+    return redirect(url_for("admin.index"))

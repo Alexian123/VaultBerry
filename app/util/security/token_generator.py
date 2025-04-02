@@ -13,7 +13,7 @@ class TokenGenerator:
         Returns:
             str: The generated password.
         """
-        return ''.join([str(secrets.randbelow(10)) for _ in range(length)])
+        return "".join([str(secrets.randbelow(10)) for _ in range(length)])
 
     @staticmethod
     def random_bytes(length=16) -> bytes:

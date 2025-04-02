@@ -7,4 +7,4 @@ class AdminHomeView(AdminIndexView):
     @expose('/')
     @admin_required
     def index(self):
-        return self.render('admin_home.html', admin_email=current_user.email)
+        return self.render("admin_home.html", admin_email=current_user.email)

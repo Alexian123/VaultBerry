@@ -6,8 +6,11 @@ class VaultTestCase(BaseTestCase):
         response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
 
-        response = self.login_user(self.example_login_data)
+        response = self.login_user_step1(self.example_email, self.example_password)
         self.assertEqual(response.status_code, 200)
+        response = self.login_user_step2(response.json["server_message"])
+        self.assertEqual(response.status_code, 200)
+        self.login_user_step3(response.json["server_message"])
 
         response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
@@ -16,8 +19,11 @@ class VaultTestCase(BaseTestCase):
         response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
 
-        response = self.login_user(self.example_login_data)
+        response = self.login_user_step1(self.example_email, self.example_password)
         self.assertEqual(response.status_code, 200)
+        response = self.login_user_step2(response.json["server_message"])
+        self.assertEqual(response.status_code, 200)
+        self.login_user_step3(response.json["server_message"])
 
         response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
@@ -29,8 +35,11 @@ class VaultTestCase(BaseTestCase):
         response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
 
-        response = self.login_user(self.example_login_data)
+        response = self.login_user_step1(self.example_email, self.example_password)
         self.assertEqual(response.status_code, 200)
+        response = self.login_user_step2(response.json["server_message"])
+        self.assertEqual(response.status_code, 200)
+        self.login_user_step3(response.json["server_message"])
 
         response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
@@ -42,8 +51,11 @@ class VaultTestCase(BaseTestCase):
         response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
 
-        response = self.login_user(self.example_login_data)
+        response = self.login_user_step1(self.example_email, self.example_password)
         self.assertEqual(response.status_code, 200)
+        response = self.login_user_step2(response.json["server_message"])
+        self.assertEqual(response.status_code, 200)
+        self.login_user_step3(response.json["server_message"])
 
         response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
@@ -51,7 +63,7 @@ class VaultTestCase(BaseTestCase):
         response = self.get_vault_entries()
         self.assertEqual(response.status_code, 200)
 
-        timestamp = (response.json)[0]['timestamp']
+        timestamp = (response.json)[0]["timestamp"]
         response = self.delete_vault_entry(timestamp)
         self.assertEqual(response.status_code, 201)
 
@@ -59,8 +71,11 @@ class VaultTestCase(BaseTestCase):
         response = self.register_user(self.example_register_data)
         self.assertEqual(response.status_code, 201)
 
-        response = self.login_user(self.example_login_data)
+        response = self.login_user_step1(self.example_email, self.example_password)
         self.assertEqual(response.status_code, 200)
+        response = self.login_user_step2(response.json["server_message"])
+        self.assertEqual(response.status_code, 200)
+        self.login_user_step3(response.json["server_message"])
 
         response = self.add_vault_entry(self.example_entry_data1)
         self.assertEqual(response.status_code, 201)
@@ -69,10 +84,9 @@ class VaultTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
 
         entry = list(response.json)[0]
-        entry['title'] = 'Account 3'
-        entry['encrypted_username'] = 'New Username'
+        entry["title"] = "Account 3"
         response = self.update_vault_entry(entry)
         self.assertEqual(response.status_code, 201)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

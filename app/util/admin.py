@@ -7,7 +7,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
-            return redirect(url_for('admin_control.admin_login')) # Redirect to login page if not authenticated
+            return redirect(url_for("admin_control.admin_login")) # Redirect to login page if not authenticated
         if not current_user.is_admin:
             abort(403) # Return 403 Forbidden if not an admin
         return f(*args, **kwargs)
