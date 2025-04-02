@@ -144,4 +144,4 @@ At the moment, you can only view the content of each table from the database.
 ## About
 
 ### Database Tables
-![drawSQL-image-export-2025-03-11](https://github.com/user-attachments/assets/85ea2a0a-5d5d-4d85-b964-815cba8d8bd1)
+![drawSQL-image-export-2025-04-02](https://github.com/user-attachments/assets/1cf4ace1-7f75-426d-b436-41824a462c32)
