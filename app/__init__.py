@@ -42,13 +42,14 @@ def create_app(config):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
-    sess.init_app(app)
+    if not app.config.get("TESTING", False): # Only use the server stored session when not testing
+        sess.init_app(app)
 
     with app.app_context():
         from app import models  # ORM Models
         from app.util import security  # Required utilities
         from app.routes import vault_bp, auth_bp, account_bp, admin_control_bp  # Route blueprints
-        from app.views import AdminHomeView, UserModelView, KeyChainModelView, VaultEntryModelView, OTPModelView, SecretModelView    # ModelViews
+        from app.views import AdminHomeView, UserModelView, VaultEntryModelView, OTPModelView, SecretModelView    # ModelViews
         
         # Init the kdf and fernet components
         if app.config.get("FERNET_KEY") is None or app.config.get("KDF_SECRET") is None:
@@ -76,7 +77,6 @@ def create_app(config):
         app_admin = Admin(app, name="VaultBerry Admin", template_mode="bootstrap3", index_view=AdminHomeView())
         app_admin.add_view(UserModelView(models.User, db.session, category="Tables"))
         app_admin.add_view(SecretModelView(models.Secret, db.session, category="Tables"))
-        app_admin.add_view(KeyChainModelView(models.KeyChain, db.session, category="Tables"))
         app_admin.add_view(VaultEntryModelView(models.VaultEntry, db.session, category="Tables"))
         app_admin.add_view(OTPModelView(models.OneTimePassword, db.session, category="Tables"))
         app_admin.add_link(MenuLink(name="Logout", category="", url="/admin/logout"))

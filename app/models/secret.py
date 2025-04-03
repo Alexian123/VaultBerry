@@ -28,3 +28,17 @@ class Secret(db.Model):
         
     def get_secret(self) -> bytes:
         return security.fernet.decrypt(self.encrypted_secret)
+    
+    @classmethod
+    def create_secrets(cls, user_id: int):
+        """Creates the empty required secrets.
+        Must be called after db.session.flush() when creating a user.
+        
+        Args:
+            user_id (int): The ID of the user who owns the secrets
+        """
+        stored_key_secret = Secret(user_id=user_id, name="SCRAM Stored Key")
+        server_key_secret = Secret(user_id=user_id, name="SCRAM Server Key")
+        vault_key_secret = Secret(user_id=user_id, name="Vault Key")
+        totp_secret = Secret(user_id=user_id, name="TOTP")
+        db.session.add_all([stored_key_secret, server_key_secret, vault_key_secret, totp_secret])

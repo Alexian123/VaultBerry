@@ -5,22 +5,15 @@ from app import create_app, db
 
 class BaseTestCase(unittest.TestCase):
     
-    example_email = "x"
-    example_password = "x"
+    example_email = "test@email.com"
+    example_password = "TestPassword123!"
     
     example_register_data = {
-        "account": {
-            "email": example_email
-        },
-        "keychain": {
-            "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-            "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-            "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
-        },
-        "passwords": {
-            "regular_password": example_password,
-            "recovery_password": "abc"
-        }
+        "email": example_email,
+        "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "password": example_password,
     }
     
     example_account_update_data = {
@@ -28,15 +21,10 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_password_change_data = {
-        "keychain": {
-            "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-            "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-            "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
-        },
-        "passwords": {
-            "regular_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-            "recovery_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
-        }
+        "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "password": example_password,
     }
     
     example_entry_data1 = {
@@ -68,8 +56,6 @@ class BaseTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app(TestConfig)
         self.client = self.app.test_client()
-        with self.app.app_context():
-            db.create_all()  # Create tables
 
     def tearDown(self):
         with self.app.app_context():

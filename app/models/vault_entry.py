@@ -1,6 +1,6 @@
 from sqlalchemy import Integer, String, Text, ForeignKey, UniqueConstraint, BigInteger, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, MappedColumn, relationship
-import base64
+from base64 import b64encode, b64decode
 from typing import TYPE_CHECKING
 from app import db
 
@@ -16,8 +16,8 @@ class VaultEntry(db.Model):
     timestamp: MappedColumn[int] = mapped_column(BigInteger)  # Entry creation timestamp, provided by the client
     title: MappedColumn[str] = mapped_column(String(255))
     url: MappedColumn[str] = mapped_column(String(255), nullable=True)    # Plaintext
-    encrypted_username: MappedColumn[bytes] = mapped_column(LargeBinary)
-    encrypted_password: MappedColumn[bytes] = mapped_column(LargeBinary)
+    encrypted_username: MappedColumn[bytes] = mapped_column(LargeBinary, nullable=True)
+    encrypted_password: MappedColumn[bytes] = mapped_column(LargeBinary, nullable=True)
     notes: MappedColumn[str] = mapped_column(Text, nullable=True)  # Plaintext
 
     user: Mapped["User"] = relationship("User", back_populates="entries")
@@ -34,7 +34,19 @@ class VaultEntry(db.Model):
             "timestamp": self.timestamp,
             "title": self.title,
             "url": self.url,
-            "encrypted_username": base64.b64encode(self.encrypted_username).decode("utf-8"),
-            "encrypted_password": base64.b64encode(self.encrypted_password).decode("utf-8"),
+            "encrypted_username": b64encode(self.encrypted_username).decode(),
+            "encrypted_password": b64encode(self.encrypted_password).decode(),
             "notes": self.notes
         }
+        
+    def set_encrypted_fields(self, username: str | None, password: str | None):
+        """Decodes and sets the encrypted fields.
+        
+        Args:
+            username (str): The base64 encoded encrypted username
+            password (str): The base64 encoded encrypted password
+        """
+        if username is not None:
+            self.encrypted_username = b64decode(username)
+        if password is not None:
+            self.encrypted_password = b64decode(password)

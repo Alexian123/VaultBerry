@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request, session
 from flask_login import login_user, logout_user, login_required
 from flask_mail import Message
-import pyotp
 import pickle
-from app.models import User, KeyChain, Secret, OneTimePassword
+from app.models import User, Secret, OneTimePassword
 from app.util import security, time
 from app import logger, db, login_manager, mail, scram
 
@@ -93,56 +92,35 @@ def load_user(user_id):
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    account_data = request.json["account"]
-    keychain_data = request.json["keychain"]
-    password_data = request.json["passwords"]
     try:
+        data = request.get_json()
+        
         # Check if the user already exists
-        existing_user = User.query.filter_by(email=account_data["email"]).first()
+        existing_user = User.query.filter_by(email=data["email"]).first()
         if existing_user:
             return jsonify({"error": "Email already in use"}), 400
 
         # Create the new user
         new_user = User(
-            email=account_data["email"],
-            first_name=account_data.get("first_name"),
-            last_name=account_data.get("last_name"),
+            email=data["email"],
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
             created_at=time.get_now_timestamp()
         )
         db.session.add(new_user)
         db.session.flush()
-
-        # Create a keychain for the new user
-        keychain = KeyChain(
-            user_id=new_user.id,
-            salt=keychain_data["salt"],
-            vault_key=keychain_data["vault_key"],
-            recovery_key=keychain_data["recovery_key"],
-        )
-        db.session.add(keychain)
         
-        # Generate and store scram auth info for regular password
-        salt, stored_key, server_key, iteration_count = scram.make_auth_info(password_data["regular_password"])
-        stored_key_secret = Secret(user_id=new_user.id, name="SCRAM Stored Key", salt=salt, iteration_count=iteration_count)
-        stored_key_secret.set_secret(stored_key)
-        db.session.add(stored_key_secret)
-        server_key_secret = Secret(user_id=new_user.id, name="SCRAM Server Key", salt=salt, iteration_count=iteration_count)
-        server_key_secret.set_secret(server_key)
-        db.session.add(server_key_secret)
+        # Create the Stored Key, Server Key, Vault Key and TOTP secrets for the new user
+        Secret.create_secrets(new_user.id)
         
-        # Generate and store scram auth info for recovery password
-        salt, stored_key, server_key, iteration_count = scram.make_auth_info(password_data["recovery_password"])
-        stored_recovery_key_secret = Secret(user_id=new_user.id, name="SCRAM Stored Key Recovery", salt=salt, iteration_count=iteration_count)
-        stored_recovery_key_secret.set_secret(stored_key)
-        db.session.add(stored_recovery_key_secret)
-        server_recovery_key_secret = Secret(user_id=new_user.id, name="SCRAM Server Key Recovery", salt=salt, iteration_count=iteration_count)
-        server_recovery_key_secret.set_secret(server_key)
-        db.session.add(server_recovery_key_secret)
+        # Store the vault key and salt
+        new_user.set_vault_key_secret(data["vault_key"], data["salt"])
         
-        # Create empty TOTP secret
-        totpSecret = Secret(user_id=new_user.id, name="TOTP")
-        db.session.add(totpSecret)
+        # Generate and store the SCRAM auth info as secrets
+        salt, stored_key, server_key, iteration_count = scram.make_auth_info(data["password"])
+        new_user.set_scram_auth_info(salt, stored_key, server_key, iteration_count)
         
+        # Commit changes
         db.session.commit()
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
@@ -151,11 +129,12 @@ def register():
 
 @auth_bp.route("/login/step1", methods=["POST"])
 def login_step1():
-    data = request.json
-    email = data["email"]
-    client_first_message = data["client_message"]
-    totp_code = data.get("code")
     try:
+        data = request.get_json()
+        email = data["email"]
+        client_first_message = data["client_message"]
+        totp_code = data.get("code")
+        
         # Find the user
         user: User = User.query.filter_by(email=email).first()
         if not user:
@@ -171,10 +150,8 @@ def login_step1():
                 return jsonify({"error": "2FA required"}), 401
 
             # Check the token
-            derived_key = user.get_totp_secret()
-            totp = pyotp.TOTP(derived_key)
-            if not totp.verify(totp_code):
-                return jsonify({"error": "Invalid token"}), 401
+            if not user.verify_totp_code(totp_code):
+                return jsonify({"error": "Invalid TOTP token"}), 401
         
         # Create the SCRAM server
         scram_server = scram.make_server(User.get_auth_information)
@@ -193,23 +170,21 @@ def login_step1():
 
 @auth_bp.route("/login/step2", methods=["POST"])
 def login_step2():
-    data = request.json
-    email = data["email"]
-    client_final_message = data["client_message"]
     try:    
+        data = request.get_json()
+        email = data["email"]
+        client_final_message = data["client_message"]
+        
         # Find the user
         user: User = User.query.filter_by(email=email).first()
         if user is None:
             return jsonify({"error": "User not found"}), 401
-
-        # Check if the keychain exists
-        if user.keychain is None:
-            return jsonify({"error": "Inexistent keychain"}), 400
         
-        # Get the server from the session
+        # Get encoded vault key and salt
+        encoded_key, encoded_salt = user.get_vault_key_secret()
+        
+        # Grab the server from the session
         scram_server = pickle.loads(session[f"{email}_scram_server"])
-        
-        # Clear the session
         del session[f"{email}_scram_server"]
         
         # Get the server's final message
@@ -220,7 +195,7 @@ def login_step2():
         login_user(user)
         
         # Return the server's evidence message 'M2' and the vault keychain
-        return jsonify({"server_message": server_final_message, "keychain": user.keychain.to_dict()}), 200
+        return jsonify({"server_message": server_final_message, "vault_key": encoded_key, "salt": encoded_salt}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

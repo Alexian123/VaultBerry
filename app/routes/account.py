@@ -1,10 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-import pyotp
-import qrcode
-import io
-import base64
-from app.models import User, Secret
+from app.models import User
 from app import db, scram
 
 account_bp = Blueprint("account", __name__)
@@ -22,9 +18,10 @@ def get_account_info():
 @account_bp.route("", methods=["PATCH"])
 @login_required
 def update_account_info():
-    data = request.json
     user: User = current_user
     try:
+        data = request.get_json()
+        
         # Find user by email
         existing_user: User = User.query.filter_by(email=data["email"]).first()
         if existing_user is not None and existing_user.id != user.id:
@@ -44,16 +41,15 @@ def update_account_info():
 @account_bp.route("", methods=["DELETE"])
 @login_required
 def delete_account():
+    user: User = current_user
     try:
-        # Check if the keychain for the current user exists
-        user: User = current_user
-        if user.keychain is None:
-            return jsonify({"error": "Inexistent keychain"}), 400
+        # Safety check: user must not be admin
+        if user.is_admin:
+            return jsonify({"error": "Cannot delete admin user"}), 400
 
         # Delete the user
-        db.session.delete(user)
+        db.session.delete(current_user)
         db.session.commit()
-        
         return jsonify({"message": "Account deleted successfully"}), 201
     except Exception as e:
         db.session.rollback()
@@ -62,44 +58,16 @@ def delete_account():
 @account_bp.route("/password", methods=["PATCH"])
 @login_required
 def change_password():
-    password_data = request.json["passwords"]
-    keychain_data = request.json["keychain"]
     user: User = current_user
     try:
-        # Check if the keychain exists
-        if user.keychain is None:
-            return jsonify({"error": "Inexistent keychain"}), 400
+        data = request.get_json()
         
-        # Update the keychain
-        user.keychain.salt = keychain_data["salt"]
-        user.keychain.vault_key = keychain_data["vault_key"]
-        user.keychain.recovery_key = keychain_data["recovery_key"]
+        # Update the vault key secret
+        user.set_vault_key_secret(data["vault_key"], data["salt"])
         
-        # Update scram auth info for regular password
-        salt, stored_key, server_key, iteration_count = scram.make_auth_info(password_data["regular_password"])
-        stored_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Stored Key"), None)
-        server_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Server Key"), None)
-        if stored_key_secret is None or server_key_secret is None:
-            raise Exception("Missing scram secret")
-        stored_key_secret.set_secret(stored_key)
-        stored_key_secret.salt = salt
-        stored_key_secret.iteration_count = iteration_count
-        server_key_secret.set_secret(server_key)
-        server_key_secret.salt = salt
-        server_key_secret.iteration_count = iteration_count
-        
-        # Update scram auth info for recovery password
-        salt, stored_key, server_key, iteration_count = scram.make_auth_info(password_data["recovery_password"])
-        stored_recovery_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Stored Key Recovery"), None)
-        server_recovery_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Server Key Recovery"), None)
-        if stored_recovery_key_secret is None or server_recovery_key_secret is None:
-            raise Exception("Missing scram recovery secret")
-        stored_recovery_key_secret.set_secret(stored_key)
-        stored_recovery_key_secret.salt = salt
-        stored_recovery_key_secret.iteration_count = iteration_count
-        server_recovery_key_secret.set_secret(server_key)
-        server_recovery_key_secret.salt = salt
-        server_recovery_key_secret.iteration_count = iteration_count
+        # Update the SCRAM auth info
+        salt, stored_key, server_key, iteration_count = scram.make_auth_info(data["password"])
+        user.set_scram_auth_info(salt, stored_key, server_key, iteration_count)
 
         db.session.commit()
         return jsonify({"message": "Password changed successfully"}), 201
@@ -116,24 +84,9 @@ def setup_2fa():
         if user.mfa_enabled:
             return jsonify({"error": "2FA already set up"}), 400
 
-        # Generate TOTP secret
-        secret = pyotp.random_base32()
-
-        # Encrypt and store
-        user.set_totp_secret(secret)
+        # Generate and save a new TOTP secret
+        provisioning_uri, img_str = user.generate_totp_secret()
         db.session.commit()
-
-        # Generate a provisioning URI
-        derived_key = user.get_totp_secret()
-        provisioning_uri = pyotp.totp.TOTP(derived_key).provisioning_uri(
-            name=user.email, issuer_name="VaultBerry"
-        )
-
-        # Generate a QR code
-        qr = qrcode.make(provisioning_uri)
-        buffered = io.BytesIO()
-        qr.save(buffered)
-        img_str = base64.b64encode(buffered.getvalue()).decode()
 
         return jsonify({"provisioning_uri": provisioning_uri, "qrcode": img_str}), 200
     except Exception as e:
