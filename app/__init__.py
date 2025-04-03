@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_admin import Admin
 from flask_admin.menu import MenuLink
 from flask_mail import Mail
+from flask_session import Session
 from scramp import ScramMechanism
 
 # Logger Configuration
@@ -21,6 +22,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 mail = Mail()
+sess = Session()
 scram = ScramMechanism()
 
 def create_app(config):
@@ -30,6 +32,9 @@ def create_app(config):
     # Set config
     app.config.from_object(config)
     
+    # Configure Session
+    app.config["SESSION_SQLALCHEMY"] = db
+    
     # Init components
     global logger
     logger = app.logger
@@ -37,6 +42,7 @@ def create_app(config):
     migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
+    sess.init_app(app)
 
     with app.app_context():
         from app import models  # ORM Models

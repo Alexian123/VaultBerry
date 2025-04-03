@@ -10,6 +10,7 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     SESSION_TYPE = "sqlalchemy"
+    SESSION_SQLALCHEMY_TABLE = "sessions"
     SESSION_PERMANENT = False
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
@@ -31,11 +32,9 @@ class BaseConfig:
 
 class DevConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-    SESSION_SQLALCHEMY_URL = SQLALCHEMY_DATABASE_URI
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
 class TestConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    SESSION_SQLALCHEMY_URL = SQLALCHEMY_DATABASE_URI
     SECRET_KEY = "test key"
     TESTING = True
