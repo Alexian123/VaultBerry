@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Boolean, BigInteger
+from sqlalchemy import Integer, String, Boolean, BigInteger, Enum
 from sqlalchemy.orm import Mapped, mapped_column, MappedColumn, relationship
 from flask_login import UserMixin
 from base64 import b64encode, b64decode, b32encode
@@ -18,16 +18,16 @@ class User(db.Model, UserMixin):
     __tablename__ = "users"
 
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    role: MappedColumn[str] = mapped_column(Enum("USER", "ADMIN", name="user_role", native_enum=True), server_default="USER")
     
-    # Flags
-    is_admin: MappedColumn[bool] = mapped_column(Boolean, default=False)
-    mfa_enabled: MappedColumn[bool] = mapped_column(Boolean, default=False)
-    
-    # Account
+    # Account Info
     email: MappedColumn[str] = mapped_column(String(255), unique=True)
     first_name: MappedColumn[str] = mapped_column(String(255), nullable=True)
     last_name: MappedColumn[str] = mapped_column(String(255), nullable=True)
     created_at: MappedColumn[int] = mapped_column(BigInteger)
+    
+    # 2FA
+    mfa_enabled: MappedColumn[bool] = mapped_column(Boolean, default=False)
     
     # Credentials
     secrets: Mapped[List["Secret"]] = relationship("Secret", back_populates="user", cascade="all, delete")
@@ -35,6 +35,13 @@ class User(db.Model, UserMixin):
     
     # Vault
     entries: Mapped[List["VaultEntry"]] = relationship("VaultEntry", back_populates="user", cascade="all, delete")
+    
+    
+    def is_admin(self):
+        """
+        Returns True if the user is an admin, False otherwise.
+        """
+        return self.role == "ADMIN"
 
     def account_dict(self):
         return {
@@ -54,8 +61,8 @@ class User(db.Model, UserMixin):
             iteration_count (int): The iteration count for the SCRAM hash function
         """
         # Find the secrets
-        stored_key_secret: Secret = next((s for s in self.secrets if s.name == "SCRAM Stored Key"), None)
-        server_key_secret: Secret = next((s for s in self.secrets if s.name == "SCRAM Server Key"), None)
+        stored_key_secret: Secret = next((s for s in self.secrets if s.type == "SCRAM_STORED"), None)
+        server_key_secret: Secret = next((s for s in self.secrets if s.type == "SCRAM_SERVER"), None)
         if stored_key_secret is None or server_key_secret is None:
             raise Exception("Missing scram secret")
         
@@ -82,7 +89,7 @@ class User(db.Model, UserMixin):
         derived_key = security.kdf.derive_key(secret.encode(), salt)
         
         # Store the secret
-        totp_secret: Secret = next((s for s in self.secrets if s.name == "TOTP"), None)
+        totp_secret: Secret = next((s for s in self.secrets if s.type == "TOTP"), None)
         if totp_secret is None:
             raise Exception("Missing TOTP secret")
         totp_secret.salt = salt
@@ -116,7 +123,7 @@ class User(db.Model, UserMixin):
         """
         
         # Decrypt the secret
-        totp_secret: Secret = next((s for s in self.secrets if s.name == "TOTP"), None)
+        totp_secret: Secret = next((s for s in self.secrets if s.type == "TOTP"), None)
         if totp_secret is None:
             raise Exception("Missing TOTP secret")
         derived_key = totp_secret.get_secret()
@@ -135,7 +142,7 @@ class User(db.Model, UserMixin):
         """
         salt_bytes = b64decode(salt)
         key_bytes = b64decode(vault_key)
-        vault_key_secret: Secret = next((s for s in self.secrets if s.name == "Vault Key"), None)
+        vault_key_secret: Secret = next((s for s in self.secrets if s.type == "VAULT"), None)
         if vault_key_secret is None:
             raise Exception("Missing Vault Key secret")
         vault_key_secret.salt = salt_bytes
@@ -147,7 +154,7 @@ class User(db.Model, UserMixin):
         Returns:
             (str, str): The base64 encoded vault key and the base64 encoded salt
         """
-        vault_key_secret: Secret = next((s for s in self.secrets if s.name == "Vault Key"), None)
+        vault_key_secret: Secret = next((s for s in self.secrets if s.name == "VAULT"), None)
         if vault_key_secret is None:
             raise Exception("Missing Vault Key secret")
         key_bytes = vault_key_secret.get_secret()
@@ -168,7 +175,7 @@ class User(db.Model, UserMixin):
         """
         try:
             # Check if an admin user with the given email already exists
-            admin_user = db.session.query(cls).filter_by(is_admin=True, email=email).first()
+            admin_user = db.session.query(cls).filter_by(role="ADMIN", email=email).first()
             if admin_user:
                 return admin_user
             
@@ -177,7 +184,7 @@ class User(db.Model, UserMixin):
                 email=email,
                 first_name="Admin",
                 last_name="User",
-                is_admin=True,
+                role="ADMIN",
                 created_at=get_now_timestamp()
             )
             db.session.add(admin_user)
@@ -186,10 +193,10 @@ class User(db.Model, UserMixin):
             # Generate and store scram auth info for regular password
             from . import Secret
             salt, stored_key, server_key, iteration_count = scram.make_auth_info(password)
-            stored_key_secret = Secret(user_id=admin_user.id, name="SCRAM Stored Key", salt=salt, iteration_count=iteration_count)
+            stored_key_secret = Secret(user_id=admin_user.id, type="SCRAM_STORED", salt=salt, iteration_count=iteration_count)
             stored_key_secret.set_secret(stored_key)
             db.session.add(stored_key_secret)
-            server_key_secret = Secret(user_id=admin_user.id, name="SCRAM Server Key", salt=salt, iteration_count=iteration_count)
+            server_key_secret = Secret(user_id=admin_user.id, type="SCRAM_SERVER", salt=salt, iteration_count=iteration_count)
             server_key_secret.set_secret(server_key)
             db.session.add(server_key_secret)
 
@@ -208,8 +215,8 @@ class User(db.Model, UserMixin):
             user: User = User.query.filter_by(email=email).first()
             if not user:
                 raise Exception("No user with this email exists")
-            stored_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Stored Key"), None)
-            server_key_secret: Secret = next((s for s in user.secrets if s.name == "SCRAM Server Key"), None)
+            stored_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_STORED"), None)
+            server_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_SERVER"), None)
             if not stored_key_secret or not server_key_secret:
                 raise Exception("Missing scram secret")
             return stored_key_secret.salt, stored_key_secret.get_secret(), server_key_secret.get_secret(), stored_key_secret.iteration_count

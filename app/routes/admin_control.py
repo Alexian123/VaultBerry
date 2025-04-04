@@ -10,7 +10,7 @@ admin_control_bp = Blueprint("admin_control", __name__)
 @admin_control_bp.route("/login", methods=["GET", "POST"])
 def admin_login():
     user: User = current_user
-    if user and user.is_authenticated and user.is_admin:
+    if user and user.is_authenticated and user.is_admin():
         # Already logged in
         return redirect(url_for("admin.index"))
     
@@ -23,7 +23,7 @@ def admin_login():
             
             if existing_user is None:
                 raise Exception("No user with this email exists.")
-            elif not existing_user.is_admin:
+            elif not existing_user.is_admin():
                 raise Exception("User is not an admin.")
 
             # Create the SCRAM client and server

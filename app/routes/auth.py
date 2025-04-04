@@ -110,8 +110,8 @@ def register():
         db.session.add(new_user)
         db.session.flush()
         
-        # Create the Stored Key, Server Key, Vault Key and TOTP secrets for the new user
-        Secret.create_secrets(new_user.id)
+        # Create the default empty secrets for the new user
+        Secret.create_default_secrets(new_user.id)
         
         # Store the vault key and salt
         new_user.set_vault_key_secret(data["vault_key"], data["salt"])
@@ -179,6 +179,10 @@ def login_step2():
         user: User = User.query.filter_by(email=email).first()
         if user is None:
             return jsonify({"error": "User not found"}), 401
+        
+        # Do not allow admin login
+        if user.is_admin():
+            return jsonify({"error": "Cannot log in as admin"}), 401
         
         # Get encoded vault key and salt
         encoded_key, encoded_salt = user.get_vault_key_secret()

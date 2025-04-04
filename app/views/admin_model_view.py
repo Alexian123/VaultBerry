@@ -10,7 +10,7 @@ class AdminModelView(ModelView):
     list_template = "admin_model_list.html"
     
     def is_accessible(self):
-        if not current_user.is_authenticated or not current_user.is_admin:
+        if not current_user.is_authenticated or not current_user.is_admin():
             return False
         return True
 

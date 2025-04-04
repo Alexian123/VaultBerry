@@ -44,7 +44,7 @@ def delete_account():
     user: User = current_user
     try:
         # Safety check: user must not be admin
-        if user.is_admin:
+        if user.is_admin():
             return jsonify({"error": "Cannot delete admin user"}), 400
 
         # Delete the user
