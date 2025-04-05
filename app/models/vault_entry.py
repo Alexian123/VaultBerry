@@ -30,12 +30,14 @@ class VaultEntry(db.Model):
 
     # Dictionary containing only the information needed in the frontend
     def to_dict(self):
+        encrypted_username = b64encode(self.encrypted_username).decode() if self.encrypted_username else None
+        encrypted_password = b64encode(self.encrypted_password).decode() if self.encrypted_password else None
         return {
             "timestamp": self.timestamp,
             "title": self.title,
             "url": self.url,
-            "encrypted_username": b64encode(self.encrypted_username).decode(),
-            "encrypted_password": b64encode(self.encrypted_password).decode(),
+            "encrypted_username": encrypted_username,
+            "encrypted_password": encrypted_password,
             "notes": self.notes
         }
         

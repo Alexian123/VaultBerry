@@ -33,7 +33,7 @@ def update_account_info():
         user.last_name = data.get("last_name", user.last_name)
         db.session.commit()
 
-        return jsonify({"message": "Account updated successfully"}), 201
+        return jsonify({"message": "Account info updated successfully"}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400

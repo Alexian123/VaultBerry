@@ -38,7 +38,7 @@ def add_vault_entry():
         )
         
         # Set the encrypted fields
-        new_entry.set_encrypted_fields(data["encrypted_username"], data["encrypted_password"])
+        new_entry.set_encrypted_fields(data.get("encrypted_username"), data.get("encrypted_password"))
 
         # Add the new entry to the database
         db.session.add(new_entry)
