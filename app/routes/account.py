@@ -61,13 +61,18 @@ def change_password():
     user: User = current_user
     try:
         data = request.get_json()
+        passwords = data["passwords"]
+        keychain = data["keychain"]
         
         # Update the vault key secret
-        user.set_vault_key_secret(data["vault_key"], data["salt"])
+        user.set_vault_keychain(keychain["vault_key"], keychain["recovery_key"], keychain["salt"])
         
         # Update the SCRAM auth info
-        salt, stored_key, server_key, iteration_count = scram.make_auth_info(data["password"])
+        salt, stored_key, server_key, iteration_count = scram.make_auth_info(passwords["regular_password"])
         user.set_scram_auth_info(salt, stored_key, server_key, iteration_count)
+        
+        # Update reovery password
+        user.set_recovery_password(passwords["recovery_password"])
 
         db.session.commit()
         return jsonify({"message": "Password changed successfully"}), 201

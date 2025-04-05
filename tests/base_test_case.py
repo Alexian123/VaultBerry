@@ -9,11 +9,20 @@ class BaseTestCase(unittest.TestCase):
     example_password = "TestPassword123!"
     
     example_register_data = {
-        "email": example_email,
-        "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "password": example_password,
+        "account_info": {
+            "email": example_email,
+            "first_name": "Test",
+            "last_name": "User"
+        },
+        "passwords": {
+            "password": example_password,
+            "recovery_password": "test"
+        },
+        "keychain": {
+            "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+            "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+            "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
+        }
     }
     
     example_account_update_data = {
@@ -21,10 +30,15 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_password_change_data = {
-        "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
-        "password": example_password,
+        "passwords": {
+            "password": example_password,
+            "recovery_password": "test"
+        },
+        "keychain": {
+            "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+            "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+            "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
+        }
     }
     
     example_entry_data1 = {

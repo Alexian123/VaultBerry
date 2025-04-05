@@ -11,7 +11,7 @@ class Secret(db.Model):
     __tablename__ = "secrets"
     
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    type: Mapped[str] = mapped_column(Enum("RECOVERY", "SCRAM_SERVER", "SCRAM_STORED", "VAULT", "TOTP", name="secret_type", native_enum=True))
+    type: Mapped[str] = mapped_column(Enum("RECOVERY", "SCRAM_SERVER", "SCRAM_STORED", "VAULT_KEY", "VAULT_RECOVERY", "TOTP", name="secret_type", native_enum=True))
     user_id: MappedColumn[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     iteration_count: MappedColumn[int] = mapped_column(Integer, nullable=True)
     salt: MappedColumn[bytes] = mapped_column(LargeBinary, nullable=True)
@@ -47,9 +47,11 @@ class Secret(db.Model):
         Args:
             user_id (int): The ID of the user who owns the secrets
         """
-        recovery_key_secret = cls(user_id=user_id, type="RECOVERY")
-        stored_key_secret = cls(user_id=user_id, type="SCRAM_STORED")
-        server_key_secret = cls(user_id=user_id, type="SCRAM_SERVER")
-        vault_key_secret = cls(user_id=user_id, type="VAULT")
-        totp_secret = cls(user_id=user_id, type="TOTP")
-        db.session.add_all([stored_key_secret, server_key_secret, vault_key_secret, totp_secret])
+        db.session.add_all([
+            cls(user_id=user_id, type="RECOVERY"), 
+            cls(user_id=user_id, type="SCRAM_STORED"), 
+            cls(user_id=user_id, type="SCRAM_SERVER"), 
+            cls(user_id=user_id, type="VAULT_KEY"),
+            cls(user_id=user_id, type="VAULT_RECOVERY"), 
+            cls(user_id=user_id, type="TOTP")
+        ])
