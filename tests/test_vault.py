@@ -29,7 +29,7 @@ class VaultTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 201)
 
         response = self.add_vault_entry(self.example_entry_data2)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 409)
 
     def test_add_2_entries_with_equal_timestamp(self):
         response = self.register_user(self.example_register_data)
@@ -65,7 +65,7 @@ class VaultTestCase(BaseTestCase):
 
         timestamp = (response.json)[0]["timestamp"]
         response = self.delete_vault_entry(timestamp)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
 
     def test_update_entry(self):
         response = self.register_user(self.example_register_data)
@@ -86,7 +86,7 @@ class VaultTestCase(BaseTestCase):
         entry = list(response.json)[0]
         entry["title"] = "Account 3"
         response = self.update_vault_entry(entry)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == "__main__":
     unittest.main()

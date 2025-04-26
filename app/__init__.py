@@ -31,8 +31,6 @@ def create_app(config):
 
     # Set config
     app.config.from_object(config)
-    
-    # Configure Session
     app.config["SESSION_SQLALCHEMY"] = db
     
     # Init components
@@ -44,6 +42,7 @@ def create_app(config):
     mail.init_app(app)
     if not app.config.get("TESTING", False): # Only use the server stored session when not testing
         sess.init_app(app)
+    logger.info("Initialized basic components")
 
     with app.app_context():
         from app import models  # ORM Models
@@ -51,15 +50,17 @@ def create_app(config):
         from app.routes import vault_bp, auth_bp, account_bp, admin_control_bp  # Route blueprints
         from app.views import AdminHomeView, UserModelView, VaultEntryModelView, OTPModelView, SecretModelView    # ModelViews
         
-        # Init the kdf and fernet components
+        # Init kdf and fernet
         if app.config.get("FERNET_KEY") is None or app.config.get("KDF_SECRET") is None:
             raise ValueError("FERNET_KEY or KDF_SECRET not set in config")
         fernet_key, kdf_secret = str(app.config["FERNET_KEY"]), str(app.config["KDF_SECRET"])
         security.fernet.init(fernet_key.encode())
         security.kdf.init(kdf_secret.encode())
+        logger.info("Initialized security components")
         
         # Create all tables
         db.create_all()
+        logger.info("Created database tables")
         
         # Create the admin user if not in testing mode
         if not app.config.get("TESTING", False):
@@ -72,6 +73,7 @@ def create_app(config):
         app.register_blueprint(vault_bp, url_prefix="/entries")
         app.register_blueprint(account_bp, url_prefix="/account")
         app.register_blueprint(admin_control_bp, url_prefix="/admin")
+        logger.info("Registered blueprints")
         
         # Define Admin dashboard with ModelViews
         app_admin = Admin(app, name="VaultBerry Admin", template_mode="bootstrap3", index_view=AdminHomeView())
@@ -80,5 +82,6 @@ def create_app(config):
         app_admin.add_view(VaultEntryModelView(models.VaultEntry, db.session, category="Tables"))
         app_admin.add_view(OTPModelView(models.OneTimePassword, db.session, category="Tables"))
         app_admin.add_link(MenuLink(name="Logout", category="", url="/admin/logout"))
+        logger.info("Registered admin views")
         
     return app

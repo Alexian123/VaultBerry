@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from app.models import User, VaultEntry
+from app.util import http
 from app import db
 
 vault_bp = Blueprint("vault", __name__)
@@ -11,9 +12,9 @@ def get_vault_entries():
     user: User = current_user
     try:
         # Fetch all the entries for the current user
-        return jsonify([entry.to_dict() for entry in user.entries]), 200
+        return jsonify([entry.to_dict() for entry in user.entries]), http.SuccessCode.OK.value
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
 
 @vault_bp.route("", methods=["POST"])
@@ -26,7 +27,7 @@ def add_vault_entry():
         # Check if an entry with the given title already exists
         existing_entry = VaultEntry.query.filter_by(user_id=user.id).filter_by(title=data["title"]).first()
         if existing_entry:
-            return jsonify({"error": "An entry with this title already exists for this user"}), 400
+            raise http.RouteError("An entry with this title already exists for this user", http.ErrorCode.CONFLICT)
 
         # Create the new entry
         new_entry = VaultEntry(
@@ -44,10 +45,12 @@ def add_vault_entry():
         db.session.add(new_entry)
         db.session.commit()
 
-        return jsonify({"message": "Entry added successfully"}), 201
+        return jsonify({"message": "Entry added successfully"}), http.SuccessCode.CREATED.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
 @vault_bp.route("", methods=["PATCH"])
 @login_required
@@ -58,7 +61,7 @@ def update_vault_entry():
         # Find the entry to be updated by its timestamp (unique per user)
         entry: VaultEntry = VaultEntry.query.filter_by(user_id=user.id).filter_by(timestamp=data["timestamp"]).first()
         if entry is None:
-            return jsonify({"error": "Entry not found"}), 400
+            raise http.RouteError("Entry not found", http.ErrorCode.NOT_FOUND)
 
         # Update the plaintext fields
         entry.title = data["title"]
@@ -73,10 +76,12 @@ def update_vault_entry():
         # Commit changes
         db.session.commit()
         
-        return jsonify({"message": "Entry updated successfully"}), 201
+        return jsonify({"message": "Entry updated successfully"}), http.SuccessCode.OK.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
 @vault_bp.route("/<int:timestamp>", methods=["DELETE"])
 @login_required
@@ -86,13 +91,15 @@ def delete_vault_entry(timestamp: int):
         # Find the entry to be deleted by its timestamp
         entry = VaultEntry.query.filter_by(user_id=user.id).filter_by(timestamp=timestamp).first()
         if entry is None:
-            return jsonify({"error": "Entry not found"}), 400
+            raise http.RouteError("Entry not found", http.ErrorCode.NOT_FOUND)
 
         # Delete the entry
         db.session.delete(entry)
         db.session.commit()
 
-        return jsonify({"message": "Entry deleted successfully"}), 201
+        return jsonify({"message": "Entry deleted successfully"}), http.SuccessCode.OK.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value

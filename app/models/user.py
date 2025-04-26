@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List
 import pyotp
 import qrcode
 import io
-from app import db, scram
+from app import db, scram, logger
 from app.util import security, get_now_timestamp
 
 if TYPE_CHECKING:
@@ -217,6 +217,7 @@ class User(db.Model, UserMixin):
             # Check if an admin user with the given email already exists
             admin_user = db.session.query(cls).filter_by(role="ADMIN", email=email).first()
             if admin_user:
+                logger.info(f"Admin with email '{email}' already exists")
                 return admin_user
             
             # Create a new admin user
@@ -241,24 +242,21 @@ class User(db.Model, UserMixin):
             db.session.add(server_key_secret)
 
             db.session.commit()  # Commit everything
-            print(f"Admin with email '{email}' created successfully")
+            logger.info(f"Admin with email '{email}' created successfully")
             return admin_user
 
         except Exception as e:
             db.session.rollback()
-            print(f"Error creating admin user: {e}")
+            logger.error(f"Error creating admin user: {e}")
             return None
         
     @staticmethod
     def get_auth_information(email: str) -> (tuple[bytes, bytes, bytes, int] | None):
-        try:
-            user: User = User.query.filter_by(email=email).first()
-            if not user:
-                raise Exception("No user with this email exists")
-            stored_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_STORED"), None)
-            server_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_SERVER"), None)
-            if not stored_key_secret or not server_key_secret:
-                raise Exception("Missing scram secret")
-            return stored_key_secret.salt, stored_key_secret.get_secret(), server_key_secret.get_secret(), stored_key_secret.iteration_count
-        except Exception as e:
-            return None
+        user: User = User.query.filter_by(email=email).first()
+        if not user:
+            raise Exception("No user with this email exists")
+        stored_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_STORED"), None)
+        server_key_secret: Secret = next((s for s in user.secrets if s.type == "SCRAM_SERVER"), None)
+        if not stored_key_secret or not server_key_secret:
+            raise Exception("Missing scram secret")
+        return stored_key_secret.salt, stored_key_secret.get_secret(), server_key_secret.get_secret(), stored_key_secret.iteration_count

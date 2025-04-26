@@ -15,7 +15,7 @@ class BaseTestCase(unittest.TestCase):
             "last_name": "User"
         },
         "passwords": {
-            "password": example_password,
+            "regular_password": example_password,
             "recovery_password": "test"
         },
         "keychain": {
@@ -31,7 +31,7 @@ class BaseTestCase(unittest.TestCase):
     
     example_password_change_data = {
         "passwords": {
-            "password": example_password,
+            "regular_password": example_password,
             "recovery_password": "test"
         },
         "keychain": {
