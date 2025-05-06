@@ -70,7 +70,7 @@ def create_app(config):
         
         # Register all blueprints
         app.register_blueprint(auth_bp)
-        app.register_blueprint(vault_bp, url_prefix="/entries")
+        app.register_blueprint(vault_bp, url_prefix="/vault")
         app.register_blueprint(account_bp, url_prefix="/account")
         app.register_blueprint(admin_control_bp, url_prefix="/admin")
         logger.info("Registered blueprints")

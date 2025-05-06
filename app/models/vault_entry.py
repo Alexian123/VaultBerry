@@ -13,7 +13,8 @@ class VaultEntry(db.Model):
     
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: MappedColumn[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    timestamp: MappedColumn[int] = mapped_column(BigInteger)  # Entry creation timestamp, provided by the client
+    
+    last_modified: MappedColumn[int] = mapped_column(BigInteger)  # Provided by the client
     title: MappedColumn[str] = mapped_column(String(255))
     url: MappedColumn[str] = mapped_column(String(255), nullable=True)    # Plaintext
     encrypted_username: MappedColumn[bytes] = mapped_column(LargeBinary, nullable=True)
@@ -23,22 +24,28 @@ class VaultEntry(db.Model):
     user: Mapped["User"] = relationship("User", back_populates="entries")
 
     __table_args__ = (
-        # An individual user can't have multiple entries with the same title or the same timestamp
+        # An individual user can't have multiple entries with the same title
         UniqueConstraint("user_id", "title", name="unique_user_title"),
-        UniqueConstraint("user_id", "timestamp", name="unique_user_timestamp"),
     )
 
-    # Dictionary containing only the information needed in the frontend
-    def to_dict(self):
+    # Dictionary containing the full entry
+    def to_detailed_dict(self):
         encrypted_username = b64encode(self.encrypted_username).decode() if self.encrypted_username else None
         encrypted_password = b64encode(self.encrypted_password).decode() if self.encrypted_password else None
         return {
-            "timestamp": self.timestamp,
+            "last_modified": self.last_modified,
             "title": self.title,
             "url": self.url,
             "encrypted_username": encrypted_username,
             "encrypted_password": encrypted_password,
             "notes": self.notes
+        }
+        
+    # Dictionary containing the entry preview
+    def to_preview_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title
         }
         
     def set_encrypted_fields(self, username: str | None, password: str | None):

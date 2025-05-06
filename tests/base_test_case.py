@@ -41,24 +41,39 @@ class BaseTestCase(unittest.TestCase):
         }
     }
     
+    example_entry_preview1 = {
+        "id": 1,
+        "title": "Account 1"
+    }
+    
     example_entry_data1 = {
-        "timestamp": 1235,
+        "last_modified": 1235,
         "title": "Account 1",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
         "encrypted_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
+    }
+    
+    example_entry_preview2 = {
+        "id": 2,
+        "title": "Account 1"
     }
     
     example_entry_data2 = {
-        "timestamp": 2000,
+        "last_modified": 2000,
         "title": "Account 1",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
         "encrypted_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
     }
     
+    example_entry_preview1 = {
+        "id": 2,
+        "title": "Account 2"
+    }
+    
     example_entry_data3 = {
-        "timestamp": 1235,
+        "last_modified": 1235,
         "title": "Account 2",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
@@ -101,17 +116,20 @@ class BaseTestCase(unittest.TestCase):
     def logout_user(self):
         return self.client.post("/logout")
     
-    def get_vault_entries(self):
-        return self.client.get("/entries")
+    def get_all_vault_entry_details(self):
+        return self.client.get("/vault/details")
+    
+    def get_all_vault_entry_previews(self):
+        return self.client.get("/vault/previews")
     
     def add_vault_entry(self, json_data):
-        return self.client.post("/entries", json=json_data)
+        return self.client.post("/vault/add", json=json_data)
     
-    def update_vault_entry(self, json_data):
-        return self.client.patch("/entries", json=json_data)
+    def update_vault_entry(self, id, json_data):
+        return self.client.patch(f"/vault/update/{id}", json=json_data)
     
-    def delete_vault_entry(self, timestamp):
-        return self.client.delete(f"/entries/{timestamp}")
+    def delete_vault_entry(self, id):
+        return self.client.delete(f"/vault/delete/{id}")
     
     def update_account(self, json_data):
         return self.client.patch("/account", json=json_data)

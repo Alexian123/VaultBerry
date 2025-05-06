@@ -4,7 +4,7 @@ class VaultEntryModelView(AdminModelView):
     column_list = (
         "id",
         "user_id",
-        "timestamp",
+        "last_modified",
         "title",
         "url",
         "notes"
