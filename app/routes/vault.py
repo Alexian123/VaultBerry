@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
+from sqlalchemy import or_
+from typing import List
 from app.models import User, VaultEntry
 from app.util import http
 from app import db
@@ -44,11 +46,43 @@ def get_vault_entry_details(id: int):
         
         # Return the entry
         return jsonify(entry.to_detailed_dict()), http.SuccessCode.OK.value
-    
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
     except Exception as e:
         return jsonify({"error", str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
-
+@vault_bp.route("/search", methods=["POST"])
+@login_required
+def search_vault_entries():
+    """
+    Retrieves vault entries for a specific user that match any of the keywords
+    in the title, url, or notes.
+    """
+    user: User = current_user
+    try:
+        data = request.get_json()
+        keywords = data["keywords"]
+        
+        # Check if keywords were provided
+        if not keywords:
+            raise http.RouteError("No keywords provided", http.ErrorCode.BAD_REQUEST)
+        
+        # Compute search conditions
+        search_conditions = []
+        for keyword in keywords:
+            search_term = f"%{keyword}%"
+            search_conditions.append(VaultEntry.title.ilike(search_term))
+            search_conditions.append(VaultEntry.url.ilike(search_term))
+            search_conditions.append(VaultEntry.notes.ilike(search_term))
+        combined_conditions = or_(*search_conditions)
+        
+        # Query vault entries
+        entries: List[VaultEntry] = VaultEntry.query.filter_by(user_id=user.id).filter(combined_conditions).all()
+        return jsonify([entry.to_detailed_dict() for entry in entries]), http.SuccessCode.OK.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
+    except Exception as e:
+        return jsonify({"error", str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
 @vault_bp.route("/add", methods=["POST"])
 @login_required

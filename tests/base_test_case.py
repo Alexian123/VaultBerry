@@ -61,8 +61,8 @@ class BaseTestCase(unittest.TestCase):
     
     example_entry_data2 = {
         "last_modified": 2000,
-        "title": "Account 1",
-        "url": "www.website.com",
+        "title": "Account 2",
+        "url": "www.address.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
         "encrypted_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
     }
@@ -74,10 +74,22 @@ class BaseTestCase(unittest.TestCase):
     
     example_entry_data3 = {
         "last_modified": 1235,
-        "title": "Account 2",
+        "title": "Entry 1",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
         "encrypted_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
+    }
+    
+    example_entry_data4 = {
+        "last_modified": 1235,
+        "title": "Entry 2",
+        "url": "www.address.com",
+        "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
+        "encrypted_password": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
+    }
+    
+    example_keywords_data = {
+        "keywords": ["account", "website"]
     }
     
     scram_client: ScramClient
@@ -130,6 +142,9 @@ class BaseTestCase(unittest.TestCase):
     
     def delete_vault_entry(self, id):
         return self.client.delete(f"/vault/delete/{id}")
+    
+    def search_vault_entries_by_keyword(self, json_data):
+        return self.client.post("/vault/search", json=json_data)
     
     def update_account(self, json_data):
         return self.client.patch("/account", json=json_data)
