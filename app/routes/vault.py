@@ -3,12 +3,10 @@ from flask_login import current_user, login_required
 from sqlalchemy import or_
 from typing import List
 from app.models import User, VaultEntry
-from app.util import http
+from app.util import http, time
 from app import db
 
 vault_bp = Blueprint("vault", __name__)
-
-# TODO: route for searching for an entry based on keywords
 
 @vault_bp.route("/details", methods=["GET"])
 @login_required
@@ -99,7 +97,7 @@ def add_vault_entry():
         # Create the new entry
         new_entry = VaultEntry(
             user_id=user.id,
-            last_modified=data["last_modified"],
+            last_modified=time.get_now_timestamp(),
             title=data["title"],
             url=data.get("url"),
             notes=data.get("notes")
@@ -132,7 +130,7 @@ def update_vault_entry(id: int):
             raise http.RouteError("Entry not found", http.ErrorCode.NOT_FOUND)
 
         # Update the plaintext fields
-        entry.last_modified = data["last_modified"]
+        entry.last_modified = time.get_now_timestamp()
         entry.title = data["title"]
         entry.url = data.get("url", entry.url)
         entry.notes = data.get("notes", entry.notes)

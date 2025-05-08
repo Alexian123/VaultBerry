@@ -47,7 +47,6 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_entry_data1 = {
-        "last_modified": 1235,
         "title": "Account 1",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
@@ -60,7 +59,6 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_entry_data2 = {
-        "last_modified": 2000,
         "title": "Account 2",
         "url": "www.address.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
@@ -73,7 +71,6 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_entry_data3 = {
-        "last_modified": 1235,
         "title": "Entry 1",
         "url": "www.website.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
@@ -81,7 +78,6 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_entry_data4 = {
-        "last_modified": 1235,
         "title": "Entry 2",
         "url": "www.address.com",
         "encrypted_username": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",

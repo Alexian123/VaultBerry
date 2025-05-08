@@ -14,7 +14,7 @@ class VaultEntry(db.Model):
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: MappedColumn[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     
-    last_modified: MappedColumn[int] = mapped_column(BigInteger)  # Provided by the client
+    last_modified: MappedColumn[int] = mapped_column(BigInteger)
     title: MappedColumn[str] = mapped_column(String(255))
     url: MappedColumn[str] = mapped_column(String(255), nullable=True)    # Plaintext
     encrypted_username: MappedColumn[bytes] = mapped_column(LargeBinary, nullable=True)
@@ -33,7 +33,6 @@ class VaultEntry(db.Model):
         encrypted_username = b64encode(self.encrypted_username).decode() if self.encrypted_username else None
         encrypted_password = b64encode(self.encrypted_password).decode() if self.encrypted_password else None
         return {
-            "last_modified": self.last_modified,
             "title": self.title,
             "url": self.url,
             "encrypted_username": encrypted_username,

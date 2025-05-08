@@ -1,4 +1,5 @@
 from app.views import AdminModelView
+from app.util import time
 
 class UserModelView(AdminModelView):
     column_list = (
@@ -10,3 +11,7 @@ class UserModelView(AdminModelView):
         "last_name",
         "created_at"
     )
+    
+    column_formatters = {
+        "created_at": lambda view, context, model, name: time.timestamp_as_datetime_string(model.created_at)
+    }
