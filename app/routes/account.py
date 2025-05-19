@@ -6,6 +6,10 @@ from app import db, scram
 
 account_bp = Blueprint("account", __name__)
 
+# TODO: Safely handle full vault re-encryption done by the client after a password change
+#           - set a flag to mark the beginning of re-encryption in the password change request
+#           - clear the flag and commit the db session after patching all vault entries
+
 @account_bp.route("", methods=["GET"])
 @login_required
 def get_account_info():

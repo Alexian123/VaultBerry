@@ -216,7 +216,7 @@ def recovery_login():
             if login_user(user):
                 db.session.commit()
                 
-            return jsonify({"keychain": user.get_vault_keychain_dict()}), http.SuccessCode.OK.value
+            return jsonify(user.get_vault_keychain_dict()), http.SuccessCode.OK.value
 
         raise http.RouteError("Invalid or expired OTP", http.ErrorCode.UNAUTHORIZED)
     except http.RouteError as e:
