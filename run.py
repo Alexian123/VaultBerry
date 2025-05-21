@@ -4,3 +4,5 @@ from config import DevConfig
 
 # Create an instance of the app with the development configuration
 app = create_app(DevConfig)
+
+# TODO: Logging & comments

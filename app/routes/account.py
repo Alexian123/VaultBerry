@@ -1,14 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 from app.models import User
 from app.util import http
-from app import db, scram
+from app import db, scram, logger
 
 account_bp = Blueprint("account", __name__)
-
-# TODO: Safely handle full vault re-encryption done by the client after a password change
-#           - set a flag to mark the beginning of re-encryption in the password change request
-#           - clear the flag and commit the db session after patching all vault entries
 
 @account_bp.route("", methods=["GET"])
 @login_required
@@ -72,6 +68,15 @@ def change_password():
         data = request.get_json()
         passwords = data["passwords"]
         keychain = data["keychain"]
+        reencrypt = data["re_encrypt"]
+        
+        if reencrypt:
+            # Save the number of vault entries left to patch (initially the total)
+            session[f"{user.id}_entries_left"] = len(user.entries)
+            logger.info("Initialized re-encryption process")
+        else:
+            # Save 0 to signal no reencryption 
+            session[f"{user.id}_entries_left"] = 0
         
         # Update the vault key secret
         user.set_vault_keychain(keychain["vault_key"], keychain["recovery_key"], keychain["salt"])
@@ -83,7 +88,12 @@ def change_password():
         # Update reovery password
         user.set_recovery_password(passwords["recovery_password"])
 
-        db.session.commit()
+        # Commit the changes if not reencrypting
+        if not reencrypt:
+            db.session.commit()
+        else:
+            db.session.flush()
+            
         return jsonify({"message": "Password changed successfully"}), http.SuccessCode.OK.value
     except Exception as e:
         db.session.rollback()

@@ -92,7 +92,7 @@ def login_step1():
         server_first_message = scram_server.get_server_first()
         
         # Store the server in the session
-        session[f"{email}_scram_server"] = pickle.dumps(scram_server)
+        session[f"{user.id}_scram_server"] = pickle.dumps(scram_server)
          
         # Return the server's first message
         return jsonify({"server_message": server_first_message}), http.SuccessCode.OK.value
@@ -118,8 +118,8 @@ def login_step2():
             raise http.RouteError("Cannot log in as admin", http.ErrorCode.FORBIDDEN)
         
         # Grab the server from the session
-        scram_server = pickle.loads(session[f"{email}_scram_server"])
-        del session[f"{email}_scram_server"]
+        scram_server = pickle.loads(session[f"{user.id}_scram_server"])
+        del session[f"{user.id}_scram_server"]
         
         # Get the server's final message
         scram_server.set_client_final(client_final_message)

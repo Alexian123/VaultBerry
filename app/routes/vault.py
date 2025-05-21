@@ -1,10 +1,10 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 from typing import List
 from app.models import User, VaultEntry
 from app.util import http, time
-from app import db
+from app import db, logger
 
 vault_bp = Blueprint("vault", __name__)
 
@@ -140,8 +140,20 @@ def update_vault_entry(id: int):
         new_encrypted_password = data.get("encrypted_password", None)
         entry.set_encrypted_fields(new_encrypted_username, new_encrypted_password)
 
-        # Commit changes
-        db.session.commit()
+        # If reencrypting, calculate the remaining number of entries left to patch
+        entries_left = session.get(f"{user.id}_entries_left", 0)
+        entries_left -= 1
+
+        # Commit if this was the last entry to patch
+        if entries_left <= 0:
+            if entries_left == 0:   # Last entry for reencryption process
+                del session[f"{user.id}_entries_left"]
+                logger.info(f"Patched entry {len(user.entries)}/{len(user.entries)}")
+            db.session.commit()
+        else:
+            session[f"{user.id}_entries_left"] = entries_left   # Save the number of remining entries
+            db.session.flush()
+            logger.info(f"Patched entry {len(user.entries) - entries_left}/{len(user.entries)}")
         
         return jsonify({"message": "Entry updated successfully"}), http.SuccessCode.OK.value
     except http.RouteError as e:

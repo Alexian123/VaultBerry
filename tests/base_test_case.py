@@ -38,7 +38,8 @@ class BaseTestCase(unittest.TestCase):
             "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
             "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
             "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
-        }
+        },
+        "re_encrypt": False
     }
     
     example_entry_preview1 = {
