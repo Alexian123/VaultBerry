@@ -1,10 +1,13 @@
 from app.views import AdminModelView
-from app.util import time
+from app.util import timestamp_as_datetime_string
 
 class UserModelView(AdminModelView):
     column_list = (
         "id",
         "role",
+        "is_active",
+        "verification_token",
+        "token_expiration"
         "mfa_enabled",
         "email",
         "first_name",
@@ -13,5 +16,6 @@ class UserModelView(AdminModelView):
     )
     
     column_formatters = {
-        "created_at": lambda view, context, model, name: time.timestamp_as_datetime_string(model.created_at)
+        "created_at": lambda view, context, model, name: timestamp_as_datetime_string(model.created_at),
+        "token_expiration": lambda view, context, model, name: timestamp_as_datetime_string(model.token_expiration)
     }

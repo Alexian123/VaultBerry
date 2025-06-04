@@ -22,16 +22,25 @@ def update_account_info():
     user: User = current_user
     try:
         data = request.get_json()
+        account_data = data["account"]
         
         # Check if email is available
-        existing_user: User = User.query.filter_by(email=data["email"]).first()
+        existing_user: User = User.query.filter_by(email=account_data["email"]).first()
         if existing_user is not None and existing_user.id != user.id:
             raise http.RouteError("Email already in use", http.ErrorCode.CONFLICT)
+        
+        no_activation_required = data.get("no_activation_required", False)  # For testing purposes
 
         # Update the user
-        user.email = data["email"]
-        user.first_name = data.get("first_name", user.first_name)
-        user.last_name = data.get("last_name", user.last_name)
+        new_email = account_data["email"]
+        if new_email != user.email:
+            if not no_activation_required:
+                user.is_active = False
+                user.verification_token = None
+                user.token_expiration = None
+            user.email = new_email
+        user.first_name = account_data.get("first_name", user.first_name)
+        user.last_name = account_data.get("last_name", user.last_name)
         db.session.commit()
 
         return jsonify({"message": "Account info updated successfully"}), http.SuccessCode.OK.value

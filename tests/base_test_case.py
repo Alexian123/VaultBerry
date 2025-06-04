@@ -22,7 +22,8 @@ class BaseTestCase(unittest.TestCase):
             "salt": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
             "vault_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ=",
             "recovery_key": "YWJjYWJjYWFhYWFhYWFhc2RzYWQ="
-        }
+        },
+        "no_activation_required": True
     }
     
     example_account_update_data = {

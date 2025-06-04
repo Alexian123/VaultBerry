@@ -20,6 +20,11 @@ class User(db.Model, UserMixin):
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     role: MappedColumn[str] = mapped_column(Enum("USER", "ADMIN", name="user_role", native_enum=True), server_default="USER")
     
+    # Email Verification
+    is_active: MappedColumn[bool] = mapped_column(Boolean, default=False)
+    verification_token: MappedColumn[str] = mapped_column(String(255), unique=True, nullable=True)
+    token_expiration: MappedColumn[int] = mapped_column(BigInteger, nullable=True)
+    
     # Account Info
     email: MappedColumn[str] = mapped_column(String(255), unique=True)
     first_name: MappedColumn[str] = mapped_column(String(255), nullable=True)
@@ -50,7 +55,7 @@ class User(db.Model, UserMixin):
             "last_name": self.last_name,
             "created_at": self.created_at
         }
-        
+
     def set_scram_auth_info(self, salt: bytes, stored_key: bytes, server_key: bytes, iteration_count: int):
         """Stores the SCRAM auth information
 
@@ -226,6 +231,7 @@ class User(db.Model, UserMixin):
                 first_name="Admin",
                 last_name="User",
                 role="ADMIN",
+                is_active=True,
                 created_at=get_now_timestamp()
             )
             db.session.add(admin_user)

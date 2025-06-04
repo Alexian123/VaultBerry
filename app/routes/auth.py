@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request, session, current_app, url_for
 from flask_login import login_user, logout_user, login_required
 from flask_mail import Message
 import pickle
@@ -20,6 +20,7 @@ def register():
         account_info = data["account_info"]
         passwords = data["passwords"]
         keychain = data["keychain"]
+        no_activation_required = data.get("no_activation_required", False)  # For testing purposes
         
         # Check if the user already exists
         existing_user = User.query.filter_by(email=account_info["email"]).first()
@@ -33,6 +34,9 @@ def register():
             last_name=account_info.get("last_name"),
             created_at=time.get_now_timestamp()
         )
+        if no_activation_required:
+            new_user.is_active = True
+
         db.session.add(new_user)
         db.session.flush()
         
@@ -57,6 +61,62 @@ def register():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
+    
+@auth_bp.route("/activation/send", methods=["POST"])
+def activation_send():
+    try:
+        email = request.args.get("email")
+        
+        # Find user by email
+        user: User = User.query.filter_by(email=email).first()
+        if not user:
+            raise http.RouteError("User not found", http.ErrorCode.NOT_FOUND)
+        
+        # New: Generate verification token and send email
+        user.verification_token = security.generator.random_string(32)
+        user.token_expiration = time.get_now_timestamp() + 24*60*60 # 24 hours in seconds
+        
+        # Construct the verification URL using the base URL from config
+        verification_link = f"{current_app.config['BASE_URL']}{url_for('auth.activate', token=user.verification_token, _external=False)}"
+
+        # Send the link via email
+        msg = Message("Verify Your Email Address", recipients=[user.email])
+        msg.body = f"Please click the following link to verify your email: {verification_link}"
+        msg.html = f"<p>Please click the following link to verify your email: <a href='{verification_link}'>{verification_link}</a></p>"
+        mail.send(msg)
+        
+        db.session.commit()
+        return jsonify({"message": "Verification email sent successfully"}), http.SuccessCode.OK.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value    
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error during email verification: {e}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred while sending the email"}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
+    
+@auth_bp.route("/activation/<token>", methods=["GET"])
+def activate(token):
+    try:
+        user: User = User.query.filter_by(verification_token=token).first()
+
+        if not user:
+            raise http.RouteError("Invalid verification token", http.ErrorCode.BAD_REQUEST)
+
+        if user.verification_token == token and user.token_expiration and user.token_expiration > time.get_now_timestamp():
+            user.is_active = True
+            user.verification_token = None # Invalidate token after use
+            user.token_expiration = None
+            db.session.commit()
+            return jsonify({"message": "Email verified successfully"}), http.SuccessCode.OK.value
+        else:
+            raise http.RouteError("Invalid or expired verification token.", http.ErrorCode.BAD_REQUEST)
+
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error during email verification: {e}", exc_info=True)
+        return jsonify({"error": "An unexpected error occurred during email verification"}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
 @auth_bp.route("/login/step1", methods=["POST"])
 def login_step1():
@@ -73,7 +133,11 @@ def login_step1():
         
         # Check if the user is an admin
         if user.is_admin():
-            raise http.RouteError("Cannot log in as admin", http.ErrorCode.FORBIDDEN)
+            raise http.RouteError("Cannot log in as admin", http.ErrorCode.UNAUTHORIZED)
+        
+        # Check if the user is activated
+        if not user.is_active:
+            raise http.RouteError("User not activated", http.ErrorCode.FORBIDDEN)
 
         # Check if 2FA is enabled
         if user.mfa_enabled:
@@ -159,7 +223,7 @@ def reovery_send():
         # Check if cooldown expired
         now = time.get_now_timestamp()
         last_otp: OneTimePassword = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.created_at.desc()).first()
-        if last_otp and last_otp.created_at > now - (60):  # change to 24 hours in seconds
+        if last_otp and last_otp.created_at > now - (24*60*60):  # 24 hours in seconds
             time_remaining = last_otp.created_at - (now - (60))
             error_message = f"Please try again in {time_remaining:.0f} seconds"
             raise http.RouteError(error_message, http.ErrorCode.BAD_REQUEST)

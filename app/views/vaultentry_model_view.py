@@ -1,5 +1,5 @@
 from app.views import AdminModelView
-from app.util import time
+from app.util import timestamp_as_datetime_string
 
 class VaultEntryModelView(AdminModelView):
     column_list = (
@@ -12,5 +12,5 @@ class VaultEntryModelView(AdminModelView):
     )
     
     column_formatters = {
-        "last_modified": lambda view, context, model, name: time.timestamp_as_datetime_string(model.last_modified)
+        "last_modified": lambda view, context, model, name: timestamp_as_datetime_string(model.last_modified)
     }
