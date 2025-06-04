@@ -19,11 +19,7 @@ class User(db.Model, UserMixin):
 
     id: MappedColumn[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     role: MappedColumn[str] = mapped_column(Enum("USER", "ADMIN", name="user_role", native_enum=True), server_default="USER")
-    
-    # Email Verification
     is_activated: MappedColumn[bool] = mapped_column(Boolean, default=False)
-    verification_token: MappedColumn[str] = mapped_column(String(255), unique=True, nullable=True)
-    token_expiration: MappedColumn[int] = mapped_column(BigInteger, nullable=True)
     
     # Account Info
     email: MappedColumn[str] = mapped_column(String(255), unique=True)
@@ -55,6 +51,26 @@ class User(db.Model, UserMixin):
             "last_name": self.last_name,
             "created_at": self.created_at
         }
+    
+    def verify_and_use_otp(self, otp: str) -> bool:
+        """Verifies the OTP and marks it as used.
+        
+        Args:
+            otp (str): The OTP to verify
+            
+        Returns:
+            bool: True on success, False on failure
+        """
+        # Find the otp
+        one_time_password: OneTimePassword = next((o for o in self.otps if o.used == False and o.otp == otp), None)
+        if not one_time_password:
+            return False
+        
+        # Mark the otp as used
+        one_time_password.used = True
+    
+        return not one_time_password.is_expired()
+    
 
     def set_scram_auth_info(self, salt: bytes, stored_key: bytes, server_key: bytes, iteration_count: int):
         """Stores the SCRAM auth information

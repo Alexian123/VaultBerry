@@ -5,6 +5,7 @@ class OTPModelView(AdminModelView):
     column_list = (
         "id",
         "user_id",
+        "type",
         "otp",
         "created_at",
         "expires_at",

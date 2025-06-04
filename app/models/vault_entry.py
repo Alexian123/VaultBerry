@@ -25,7 +25,7 @@ class VaultEntry(db.Model):
 
     __table_args__ = (
         # An individual user can't have multiple entries with the same title
-        UniqueConstraint("user_id", "title", name="unique_user_title"),
+        UniqueConstraint("user_id", "title", name="_user_title_uc"),
     )
 
     # Dictionary containing the full entry

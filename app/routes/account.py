@@ -36,8 +36,6 @@ def update_account_info():
         if new_email != user.email:
             if not no_activation_required:
                 user.is_activated = False
-                user.verification_token = None
-                user.token_expiration = None
             user.email = new_email
         user.first_name = account_data.get("first_name", user.first_name)
         user.last_name = account_data.get("last_name", user.last_name)

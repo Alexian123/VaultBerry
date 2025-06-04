@@ -72,12 +72,19 @@ def activation_send():
         if not user:
             raise http.RouteError("User not found", http.ErrorCode.NOT_FOUND)
         
+        # Check if cooldown expired
+        time_remaining = OneTimePassword.get_cooldown_remaining_seconds_for_user(user.id, "ACTIVATION", 30*60)
+        if time_remaining > 0:
+            error_message = f"Am activation email has already been sent.\n"
+            error_message += f"Please try again in {int(time_remaining/60//60)} hours, "
+            error_message += f"{int((time_remaining/60)%60)} minutes, and {int(time_remaining%60)} seconds."
+            raise http.RouteError(error_message, http.ErrorCode.BAD_REQUEST)
+        
         # New: Generate verification token and send email
-        user.verification_token = security.generator.random_string(32)
-        user.token_expiration = time.get_now_timestamp() + 24*60*60 # 24 hours in seconds
+        token = OneTimePassword.create_email_verification_otp(user.id)
         
         # Construct the verification URL using the base URL from config
-        verification_link = f"{current_app.config['BASE_URL']}{url_for('auth.activate', token=user.verification_token, _external=False)}"
+        verification_link = f"{current_app.config['BASE_URL']}{url_for('auth.activate', id=user.id, token=token, _external=False)}"
 
         # Send the link via email
         msg = Message("Verify Your Email Address", recipients=[user.email])
@@ -94,18 +101,17 @@ def activation_send():
         logger.error(f"Error during email verification: {e}", exc_info=True)
         return jsonify({"error": "An unexpected error occurred while sending the email"}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
     
-@auth_bp.route("/activation/<token>", methods=["GET"])
-def activate(token):
+@auth_bp.route("/activation/<int:id>/<token>", methods=["GET"])
+def activate(id: int, token: str):
     try:
-        user: User = User.query.filter_by(verification_token=token).first()
-
+        # Find the user
+        user: User = User.query.filter_by(id=id).first()
         if not user:
-            raise http.RouteError("Invalid verification token", http.ErrorCode.BAD_REQUEST)
-
-        if user.verification_token == token and user.token_expiration and user.token_expiration > time.get_now_timestamp():
+            raise http.RouteError("User not found", http.ErrorCode.BAD_REQUEST)
+        
+        # Check if the token is valid and not expired
+        if user.verify_and_use_otp(token):
             user.is_activated = True
-            user.verification_token = None # Invalidate token after use
-            user.token_expiration = None
             db.session.commit()
             return jsonify({"message": "Email verified successfully"}), http.SuccessCode.OK.value
         else:
@@ -221,23 +227,15 @@ def reovery_send():
             raise http.RouteError("User not found", http.ErrorCode.NOT_FOUND)
 
         # Check if cooldown expired
-        now = time.get_now_timestamp()
-        last_otp: OneTimePassword = OneTimePassword.query.filter_by(user_id=user.id).order_by(OneTimePassword.created_at.desc()).first()
-        if last_otp and last_otp.created_at > now - (24*60*60):  # 24 hours in seconds
-            time_remaining = last_otp.created_at - (now - (60))
-            error_message = f"Please try again in {time_remaining:.0f} seconds"
+        time_remaining = OneTimePassword.get_cooldown_remaining_seconds_for_user(user.id, "RECOVERY", 24*60*60)
+        if time_remaining > 0:
+            error_message = f"A recovery email has already been sent.\n"
+            error_message += f"Please try again in {int(time_remaining/60//60)} hours, "
+            error_message += f"{int((time_remaining/60)%60)} minutes, and {int(time_remaining%60)} seconds."
             raise http.RouteError(error_message, http.ErrorCode.BAD_REQUEST)
 
         # Generate a new OTP
-        otp = security.generator.otp()
-        expires_at = now + (5 * 60)  # 5 minutes in seconds
-        one_time_password = OneTimePassword(
-            user_id=user.id,
-            otp=otp,
-            created_at=now,
-            expires_at=expires_at
-        )
-        db.session.add(one_time_password)
+        otp = OneTimePassword.create_recovery_otp(user.id, 5*60)
 
         # Send an email containing the OTP to the user
         msg = Message("Your Recovery OTP", recipients=[email])
@@ -275,15 +273,9 @@ def recovery_login():
             raise http.RouteError("Invalid recovery password", http.ErrorCode.UNAUTHORIZED)
 
         # Check OTP
-        one_time_password: OneTimePassword = OneTimePassword.query.filter_by(otp=otp, user_id=user.id).first()
-        now = time.get_now_timestamp()
-        if one_time_password and not one_time_password.used and one_time_password.expires_at > now:
-            # Mark OTP as used
-            one_time_password.used = True
-
+        if user.verify_and_use_otp(otp):
             if login_user(user):
                 db.session.commit()
-                
             return jsonify(user.get_vault_keychain_dict()), http.SuccessCode.OK.value
 
         raise http.RouteError("Invalid or expired OTP", http.ErrorCode.UNAUTHORIZED)

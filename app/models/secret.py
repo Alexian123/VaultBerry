@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, LargeBinary, Enum, UniqueConstraint
+from sqlalchemy import Integer, ForeignKey, LargeBinary, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, MappedColumn, relationship
 from typing import TYPE_CHECKING
 from app import db

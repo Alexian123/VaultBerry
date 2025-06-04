@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 class TokenGenerator:
 
     @staticmethod
-    def otp(length=9) -> str:
+    def random_digits(length=9) -> str:
         """Generate a random numeric password.
 
         Args:

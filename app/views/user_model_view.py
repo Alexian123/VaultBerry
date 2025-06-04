@@ -6,8 +6,6 @@ class UserModelView(AdminModelView):
         "id",
         "role",
         "is_activated",
-        "verification_token",
-        "token_expiration"
         "mfa_enabled",
         "email",
         "first_name",
@@ -17,5 +15,4 @@ class UserModelView(AdminModelView):
     
     column_formatters = {
         "created_at": lambda view, context, model, name: timestamp_as_datetime_string(model.created_at),
-        "token_expiration": lambda view, context, model, name: timestamp_as_datetime_string(model.token_expiration)
     }
