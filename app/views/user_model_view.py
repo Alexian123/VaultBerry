@@ -5,7 +5,7 @@ class UserModelView(AdminModelView):
     column_list = (
         "id",
         "role",
-        "is_active",
+        "is_activated",
         "verification_token",
         "token_expiration"
         "mfa_enabled",

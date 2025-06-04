@@ -27,7 +27,10 @@ class BaseTestCase(unittest.TestCase):
     }
     
     example_account_update_data = {
-        "email": "test2@email.com"
+        "account": {
+            "email": "test2@email.com"
+        },
+        "no_activation_required": True
     }
     
     example_password_change_data = {

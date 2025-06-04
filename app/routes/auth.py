@@ -35,7 +35,7 @@ def register():
             created_at=time.get_now_timestamp()
         )
         if no_activation_required:
-            new_user.is_active = True
+            new_user.is_activated = True
 
         db.session.add(new_user)
         db.session.flush()
@@ -103,7 +103,7 @@ def activate(token):
             raise http.RouteError("Invalid verification token", http.ErrorCode.BAD_REQUEST)
 
         if user.verification_token == token and user.token_expiration and user.token_expiration > time.get_now_timestamp():
-            user.is_active = True
+            user.is_activated = True
             user.verification_token = None # Invalidate token after use
             user.token_expiration = None
             db.session.commit()
@@ -136,7 +136,7 @@ def login_step1():
             raise http.RouteError("Cannot log in as admin", http.ErrorCode.UNAUTHORIZED)
         
         # Check if the user is activated
-        if not user.is_active:
+        if not user.is_activated:
             raise http.RouteError("User not activated", http.ErrorCode.FORBIDDEN)
 
         # Check if 2FA is enabled
@@ -265,6 +265,10 @@ def recovery_login():
         user: User = User.query.filter_by(email=email).first()
         if not user:
             raise http.RouteError("User not found", http.ErrorCode.NOT_FOUND)
+        
+        # Check if the user is activated
+        if not user.is_activated:
+            raise http.RouteError("User not activated", http.ErrorCode.FORBIDDEN)
 
         # Check recovery password
         if not user.check_recovery_password(recovery_password):

@@ -21,7 +21,7 @@ class User(db.Model, UserMixin):
     role: MappedColumn[str] = mapped_column(Enum("USER", "ADMIN", name="user_role", native_enum=True), server_default="USER")
     
     # Email Verification
-    is_active: MappedColumn[bool] = mapped_column(Boolean, default=False)
+    is_activated: MappedColumn[bool] = mapped_column(Boolean, default=False)
     verification_token: MappedColumn[str] = mapped_column(String(255), unique=True, nullable=True)
     token_expiration: MappedColumn[int] = mapped_column(BigInteger, nullable=True)
     
@@ -231,7 +231,7 @@ class User(db.Model, UserMixin):
                 first_name="Admin",
                 last_name="User",
                 role="ADMIN",
-                is_active=True,
+                is_activated=True,
                 created_at=get_now_timestamp()
             )
             db.session.add(admin_user)
