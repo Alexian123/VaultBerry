@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 
 try:
@@ -11,7 +12,8 @@ class BaseConfig:
     
     SESSION_TYPE = "sqlalchemy"
     SESSION_SQLALCHEMY_TABLE = "sessions"
-    SESSION_PERMANENT = False
+    SESSION_PERMANENT = True
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Strict'

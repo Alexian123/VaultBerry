@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user
 from scramp import ScramClient
 from app.models import User, Secret
 from app.util import admin_required
-from app import scram
+from app import scram, logger
 
 admin_control_bp = Blueprint("admin_control", __name__)
 
