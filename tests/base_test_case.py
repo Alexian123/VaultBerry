@@ -46,6 +46,10 @@ class BaseTestCase(unittest.TestCase):
         "re_encrypt": False
     }
     
+    example_account_delete_data = {
+        "password": example_password
+    }
+    
     example_entry_preview1 = {
         "id": 1,
         "title": "Account 1"
@@ -150,17 +154,11 @@ class BaseTestCase(unittest.TestCase):
     def update_account(self, json_data):
         return self.client.patch("/account", json=json_data)
     
-    def delete_account(self):
-        return self.client.delete("/account")
+    def delete_account(self, json_data):
+        return self.client.post("/account/delete", json=json_data)
     
     def change_password(self, json_data):
         return self.client.patch("/account/password", json=json_data)
     
     def setup_2fa(self):
         return self.client.post("/account/2fa/setup")
-    
-    def get_2fa_status(self):
-        return self.client.get("/account/2fa/status")
-    
-    def disable_2fa(self):
-        return self.client.post("/account/2fa/disable")

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from flask_login import current_user, login_required
 from app.models import User
-from app.util import http
+from app.util import http, security
 from app import db, scram, logger
 
 account_bp = Blueprint("account", __name__)
@@ -48,7 +48,7 @@ def update_account_info():
         db.session.rollback()
         return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
 
-@account_bp.route("", methods=["DELETE"])
+@account_bp.route("/delete", methods=["POST"])
 @login_required
 def delete_account():
     user: User = current_user
@@ -56,6 +56,12 @@ def delete_account():
         # Safety check: user must not be admin
         if user.is_admin():
             raise http.RouteError("Cannot delete admin user", http.ErrorCode.FORBIDDEN)
+        
+        # Check password hash
+        data = request.get_json()
+        password = data["password"]
+        if not security.hasher.check(user.hashed_password, password):
+            raise http.RouteError("Incorrect password", http.ErrorCode.UNAUTHORIZED)
 
         # Delete the user
         db.session.delete(current_user)
@@ -120,6 +126,34 @@ def setup_2fa():
         db.session.commit()
 
         return jsonify({"provisioning_uri": provisioning_uri, "qrcode": img_str}), http.SuccessCode.OK.value
+    except http.RouteError as e:
+        return jsonify({"error": str(e)}), e.error_code.value
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), http.ErrorCode.INTERNAL_SERVER_ERROR.value
+    
+    
+@account_bp.route("/2fa/activate", methods=["POST"])
+@login_required
+def activate_2fa():
+    user: User = current_user
+    try:
+        data = request.get_json()
+        totp_code = data['totp_code']
+        
+        # Check current status
+        if user.mfa_enabled:
+            raise http.RouteError("2FA already activated", http.ErrorCode.BAD_REQUEST)
+
+        # Check the totp code
+        if not user.verify_totp_code(totp_code):
+            raise http.RouteError("Invalid TOTP token", http.ErrorCode.UNAUTHORIZED)
+
+        # Set flag to true
+        user.mfa_enabled = True
+        
+        db.session.commit()
+        return jsonify({"message": "2FA activated successfully"}), http.SuccessCode.OK.value
     except http.RouteError as e:
         return jsonify({"error": str(e)}), e.error_code.value
     except Exception as e:

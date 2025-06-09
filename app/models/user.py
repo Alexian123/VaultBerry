@@ -31,6 +31,7 @@ class User(db.Model, UserMixin):
     mfa_enabled: MappedColumn[bool] = mapped_column(Boolean, default=False)
     
     # Credentials
+    hashed_password: MappedColumn[str] = mapped_column(String(255), nullable=True)  # For account deletion
     secrets: Mapped[List["Secret"]] = relationship("Secret", back_populates="user", cascade="all, delete")
     otps: Mapped[List["OneTimePassword"]] = relationship("OneTimePassword", back_populates="user", cascade="all, delete")
     
@@ -149,9 +150,6 @@ class User(db.Model, UserMixin):
         buffered = io.BytesIO()
         qr.save(buffered)
         img_str = b64encode(buffered.getvalue()).decode()
-        
-        # Update the flag
-        self.mfa_enabled = True
         
         return provisioning_uri, img_str
     

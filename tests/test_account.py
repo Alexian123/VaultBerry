@@ -25,7 +25,7 @@ class AccountTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.login_user_step3(response.json["server_message"])
 
-        response = self.delete_account()
+        response = self.delete_account(self.example_account_delete_data)
         self.assertEqual(response.status_code, 200)
         
         response = self.login_user_step1(self.example_email, self.example_password)

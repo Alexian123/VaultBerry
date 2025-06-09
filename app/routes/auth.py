@@ -32,7 +32,8 @@ def register():
             email=account_info["email"],
             first_name=account_info.get("first_name"),
             last_name=account_info.get("last_name"),
-            created_at=time.get_now_timestamp()
+            created_at=time.get_now_timestamp(),
+            hashed_password=security.hasher.hash(passwords["regular_password"])
         )
         if no_activation_required:
             new_user.is_activated = True
