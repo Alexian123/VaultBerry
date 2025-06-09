@@ -38,8 +38,8 @@ MAIL_SERVER=<mail_server>   # example: smtp.gmail.com
 MAIL_USERNAME=<your_email_address>
 MAIL_PASSWORD=<your_email_password>
 
-FERNET_KEY=<encryption_key>         # Generate once using app.utils.security_utils.SecurityManager.generate_fernet_key()
-KDF_SECRET=<key_derivation_secret>  # Generate once using app.utils.security_utils.SecurityManager.generate_kdf_secret()
+FERNET_KEY=<encryption_key>         # Generate once using app.util.security.generator.fernet_key() in the Python shell
+KDF_SECRET=<key_derivation_secret>  # Generate once using app.util.security.generator.random_string(32) in the Python shelll
 ```
 
 ### Build
