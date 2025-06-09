@@ -31,6 +31,8 @@ FLASK_APP=run:app
 FLASK_ENV=development
 FLASK_DEBUG=1
 
+BASE_URL=https://192.168.1.129:8443 # IP & port of the server
+
 ADMIN_EMAIL=admin@example.com       # email for the admin user
 ADMIN_PASSWORD=admin                # password for the admin user
 
