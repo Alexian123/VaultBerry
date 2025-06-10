@@ -161,4 +161,4 @@ sh run_tests.sh
 
 Access route **/admin/login** from your browser to login with the admin account (automatically created on the first run).
 <br>
-At the moment, you can view the content of each table from the database.
+At the moment, you can view the content of each table from the [database](https://drawsql.app/teams/dev-675/diagrams/vaultberry/embed).
